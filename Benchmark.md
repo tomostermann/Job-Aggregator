@@ -18,4 +18,8 @@
 * **Stack technique imprécise :** Manque de clarté sur les versions des frameworks ou les outils utilisés (CI/CD, Cloud), rendant l'évaluation technique complexe.
 * **Processus répétitifs :** Nécessité de créer un nouveau compte et de ressaisir son profil complet pour chaque plateforme consultée.
 * **Manque de feedback :** Absence totale de réponse après l'envoi d'une candidature sur les grands portails généralistes.
-
+* **Le syndrome du "Faux Junior" :** Les offres catégorisées comme "Stage" ou "Junior" mais qui exigent paradoxalement 2 à 3 ans d'expérience préalable sur des stacks complexes.
+* **L'incompatibilité des rythmes d'alternance :** Les annonces ne précisent presque jamais les rythmes école/entreprise acceptés (ex: 3 semaines/1 semaine, temps partiel), ce qui entraîne une perte de temps en entretiens pour rien.
+* **Le "Remote-washing" :** Des offres taguées "Télétravail" ou "Remote" pour attirer le clic, mais dont la description révèle qu'il ne s'agit que d'un jour par semaine autorisé.
+* **Les process de recrutement abusifs :** Aucune visibilité initiale sur les étapes du recrutement. Les étudiants découvrent souvent trop tard qu'ils doivent réaliser un projet technique de 3 jours non rémunéré avant même de voir l'équipe.
+* **Le mur des mots-clés (Filtre RH) :** Les recruteurs non-techniques ou les algorithmes rejettent automatiquement un candidat s'il n'a pas le mot-clé exact (ex: "React") alors que l'étudiant maîtrise parfaitement des concepts équivalents (Vue.js, Angular) et pourrait s'adapter en quelques jours.
