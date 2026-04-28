@@ -17,7 +17,8 @@ services:
       - DB_PASSWORD=secret
       - DB_NAME=jobdb
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     networks:
       - app-network
 
@@ -30,6 +31,11 @@ services:
       - .env
     networks:
       - app-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U jobuser -d jobdb"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
   adminer:
     image: adminer
