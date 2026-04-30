@@ -1,6 +1,3 @@
-require("dotenv").config({
-  path: require("path").resolve(__dirname, "../../../.env"),
-});
 const https = require("https");
 
 const API_BASE = "https://epi-api.welovedevs.com";
