@@ -2,12 +2,12 @@
 
 ## Team
 
-| Member                       | Role                     |
-| ---------------------------- | ------------------------ |
-| Tom Ostermann (TO)           | Tech Lead / DevOps & CI  |
-| Arthur Fabbri (AF)           | Backend & Data           |
-| Christophe Rajaonarivoni (C) | Frontend & Product       |
-| Imran Nogueira               | Frontend & Documentation |
+| Member                   |
+| ------------------------ |
+| Tom Ostermann            |
+| Arthur Fabbri            |
+| Christophe Rajaonarivoni |
+| Imran Nogueira           |
 
 ## Tracking Tool
 
