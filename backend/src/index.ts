@@ -3,6 +3,7 @@ import cors from "cors";
 import dotenv from "dotenv";
 import initDb from "./config/initDb";
 import authRoutes from "./auth/auth.routes";
+import ingestRouter from "./routes/ingest";
 
 dotenv.config();
 initDb();
@@ -18,6 +19,7 @@ app.get("/api/health", (_req, res) => {
 });
 
 app.use("/api/auth", authRoutes);
+app.use("/api/admin/ingest", ingestRouter);
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);

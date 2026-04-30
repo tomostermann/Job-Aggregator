@@ -10,12 +10,13 @@ CREATE TABLE IF NOT EXISTS users (
 -- Offers
 CREATE TABLE IF NOT EXISTS offers (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  title VARCHAR(255) NOT NULL,
-  company VARCHAR(255),
-  location VARCHAR(255),
-  contract_type VARCHAR(100),
+  source_id VARCHAR(255) UNIQUE,
+  title TEXT NOT NULL,
+  company TEXT,
+  location TEXT,
+  contract_type TEXT,
   description TEXT,
-  salary VARCHAR(100),
+  salary TEXT,
   source VARCHAR(100),
   published_at TIMESTAMP,
   created_at TIMESTAMP DEFAULT NOW()
