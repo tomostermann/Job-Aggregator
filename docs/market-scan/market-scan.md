@@ -2,15 +2,11 @@
 
 ## 1. Competitive Landscape
 
-- **LinkedIn / Indeed:** Generalist leaders with massive volume, but polluted by outdated listings and a lack of precise technical details.
+- **LinkedIn / Indeed:** Generalist leaders with massive volume, but polluted by outdated listings and a lack of precise technical details. (source: Reddit , Trustpilot)
 
 ---
 
-- **Welcome to the Jungle:** Leader in employer branding, but technology filters are often too limited for engineering profiles.
-
----
-
-- **Otta:** A tech-focused qualitative platform providing precise information about technologies and companies.
+- **Welcome to the Jungle:** Leader in employer branding, but technology filters are often too limited for engineering profiles. (source : Trustpilot)
 
 ---
 
@@ -18,31 +14,31 @@
 
 ---
 
-- **Glassdoor:** Essential for salary reviews and company culture insights, but the core job search experience is secondary.
+- **Glassdoor:** Essential for salary reviews and company culture insights, but the core job search experience is secondary. (Source : trustpilot)
 
 ---
 
-- **Adzuna / Jooble:** Aggregator models that centralize multiple sources to fight market fragmentation.
+- **Adzuna / Jooble:** Aggregator models that centralize multiple sources to fight market fragmentation. (Source : trustpilot)
 
 ## 2. User Pain Points
 
-- **Extreme fragmentation:** Students must monitor more than 10 different platforms to not miss any internship or apprenticeship offer.
+- **Extreme fragmentation:** Students must monitor more than 10 different platforms to not miss any internship or apprenticeship offer.(Source : Analyse comparative des flux de données.)
 
 ---
 
-- **Ghost Jobs:** Listings remaining online even though the position has already been filled, causing a major waste of time.
+- **Ghost Jobs:** Listings remaining online even though the position has already been filled, causing a major waste of time.(Source : Trustpilot , Glassdoor)
 
 ---
 
-- **Salary opacity:** Salary information is absent from the majority of offers, yet it is a key data point for students and a required field in our database.
+- **Salary opacity:** Salary information is absent from the majority of offers, yet it is a key data point for students and a required field in our database.(Sources : TrustPilot)
 
 ---
 
-- **Faulty contract filters:** Difficulty in isolating internships and apprenticeships from permanent job offers in traditional search engines.
+- **Faulty contract filters:** Difficulty in isolating internships and apprenticeships from permanent job offers in traditional search engines.(Source: Trustpilot)
 
 ---
 
-- **Imprecise tech stack:** Lack of clarity on framework versions or tools used (CI/CD, Cloud), making technical evaluation complex.
+- **Imprecise tech stack:** Lack of clarity on framework versions or tools used (CI/CD, Cloud), making technical evaluation complex.(Source: Trustpilot)
 
 ---
 
@@ -50,11 +46,11 @@
 
 ---
 
-- **Lack of feedback:** Complete absence of response after submitting an application on major generalist job portals.
+- **Lack of feedback:** Complete absence of response after submitting an application on major generalist job portals.(Source :ChooseMyCompany)
 
 ---
 
-- **The "Fake Junior" syndrome:** Offers categorized as "Internship" or "Junior" but paradoxically requiring 2 to 3 years of prior experience on complex stacks.
+- **The "Fake Junior" syndrome:** Offers categorized as "Internship" or "Junior" but paradoxically requiring 2 to 3 years of prior experience on complex stacks.(Source : X)
 
 ---
 
@@ -62,12 +58,13 @@
 
 ---
 
-- **Remote-washing:** Offers tagged as "Remote" or "Full Remote" to attract clicks, but whose description reveals only one day per week is actually allowed.
+- **Remote-washing:** Offers tagged as "Remote" or "Full Remote" to attract clicks, but whose description reveals only one day per week is actually allowed .(Source: Market analysis on offers labeled "Entry Level" on LinkedIn.)
 
 ---
 
-- **Abusive recruitment processes:** No initial visibility on recruitment steps. Students often discover too late that they must complete an unpaid 3-day technical project before even meeting the team.
+- **Abusive recruitment processes:** No initial visibility on recruitment steps. Students often discover too late that they must complete an unpaid 3-day technical project before even meeting the team.(Source : Glassdoor)
 
 ---
 
-- **The keyword wall (HR filter):** Non-technical recruiters or algorithms automatically reject a candidate if they lack the exact keyword (e.g., "React"), even though the student fully masters equivalent concepts (Vue.js, Angular) and could adapt within days.
+- **The keyword wall (HR filter):** Non-technical recruiters or algorithms automatically reject a candidate if they lack the exact keyword (e.g., "React"), even though the student fully masters equivalent concepts (Vue.js, Angular) and could adapt within days.(Source : Personnal analysis of the market )
+
