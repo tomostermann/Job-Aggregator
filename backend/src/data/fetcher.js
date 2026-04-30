@@ -94,6 +94,12 @@ async function fetchAllOffers() {
         `[Fetcher] Page ${page} — ${offers.length} offres (${allOffers.length}/${totalCount})`,
       );
 
+      // Stopper si la page est vide (totalCount peut être inexact)
+      if (offers.length === 0) {
+        console.log("[Fetcher] Page vide — arrêt de la pagination");
+        break;
+      }
+
       page++;
 
       // Rate limit : attendre 1 seconde entre chaque requête
