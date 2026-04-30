@@ -44,16 +44,30 @@ Fill in the required values in your `.env` file (see [Environment Variables](#en
 
 ### 3. Start the full stack
 
+**Development** (with live reload):
+
 ```bash
 docker compose up --build
+```
+
+**Production** (detached mode):
+
+```bash
+docker compose up --build -d
+```
+
+**Stop the stack:**
+
+```bash
+docker compose down
 ```
 
 | Service  | URL                   |
 | -------- | --------------------- |
 | Frontend | http://localhost:3000 |
-| Backend  | http://localhost:5000 |
+| Backend  | http://localhost:5001 |
 | Database | localhost:5432        |
-| Adminer  | http://localhost:8080 |
+| Adminer  | http://localhost:8282 |
 
 ---
 
@@ -85,7 +99,7 @@ DB_HOST=db         # Docker service name (do not change)
 DB_PORT=5432       # PostgreSQL port
 
 # TODO: add WeLoveDevs API key once obtained
-WELD_API_KEY=
+WELOVEDEVS_API_KEY=
 ```
 
 > ⚠️ Never commit your `.env` file. It is listed in `.gitignore`.
@@ -104,8 +118,8 @@ Base URL: `http://localhost:5000/api`
 
 All decision records and product documentation are available in the [`docs/`](./docs) folder.
 
-| Document                                                   | Description                 |
-| ---------------------------------------------------------- | --------------------------- |
-| [`docs/adr/ADR-001-stack.md`](./docs/adr/ADR-001-stack.md) | Technical stack decision    |
-| `docs/adr/ADR-002-database.md`                             | Database choice — TODO      |
-| `docs/market-scan.md`                                      | Competitive analysis — TODO |
+| Document                                                   | Description              |
+| ---------------------------------------------------------- | ------------------------ |
+| [`docs/adr/ADR-001-stack.md`](./docs/adr/ADR-001-stack.md) | Technical stack decision |
+| `docs/adr/ADR-002-database.md`                             | Database choice — TODO   |
+| `docs/market-scan.md`                                      | Competitive analysis     |
