@@ -1,6 +1,5 @@
 name: Job Aggregator CI
 
-# Déclencheurs exigés par le sujet 
 on:
   push:
     branches: [ main ]
@@ -21,15 +20,17 @@ jobs:
           node-version: '20'
           cache: 'npm'
 
-      # 1. Build check [cite: 136]
+      # Installation dans le bon dossier
       - name: Install dependencies
         run: npm install
+        working-directory: ./backend
 
-      # 2. Quality check [cite: 137]
+      # Vérification de la qualité du code 
       - name: Lint check
         run: npm run lint
+        working-directory: ./backend
 
-      # 3. Automated tests 
-      # Doit tester 2 routes API et 1 fonction de normalisation
+      # Exécution des tests (Routes API + Normalisation) 
       - name: Run tests
         run: npm test
+        working-directory: ./backend
