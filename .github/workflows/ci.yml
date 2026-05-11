@@ -1,0 +1,35 @@
+name: Job Aggregator CI
+
+# Déclencheurs exigés par le sujet 
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      # 1. Build check [cite: 136]
+      - name: Install dependencies
+        run: npm install
+
+      # 2. Quality check [cite: 137]
+      - name: Lint check
+        run: npm run lint
+
+      # 3. Automated tests 
+      # Doit tester 2 routes API et 1 fonction de normalisation
+      - name: Run tests
+        run: npm test
