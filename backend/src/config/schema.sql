@@ -19,6 +19,7 @@ CREATE TABLE IF NOT EXISTS offers (
   salary TEXT,
   source VARCHAR(100),
   published_at TIMESTAMP,
+  status VARCHAR(50) DEFAULT 'pending' CHECK (status IN ('pending', 'validated', 'rejected')),
   created_at TIMESTAMP DEFAULT NOW()
 );
 
