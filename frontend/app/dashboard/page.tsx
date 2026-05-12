@@ -7,16 +7,7 @@ import { StatCard } from "@/components/StatCard";
 import { SectionHeader } from "@/components/SectionHeader";
 import { OfferRow } from "@/components/OfferCard";
 import { SkeletonCard, SkeletonStat } from "@/components/SkeletonCard";
-import { OffersPerMonth, ContractDistribution } from "@/components/Charts";
-import {
-  BriefcaseIcon,
-  SparklesIcon,
-  HeartIcon,
-  ChartIcon,
-  ArrowRightIcon,
-  TrendingUpIcon,
-  RefreshIcon,
-} from "@/components/Icons";
+import { BriefcaseIcon, SparklesIcon, HeartIcon } from "@/components/Icons";
 import { api } from "@/lib/api";
 import type { Offer } from "@/lib/types";
 import { useAuth } from "@/lib/auth-context";
@@ -67,17 +58,10 @@ function DashboardContent() {
     .sort((a, b) => b.score - a.score)
     .slice(0, 4);
 
-  const latest = [...offers]
-    .sort((a, b) => {
-      const ta = a.published_at ? new Date(a.published_at).getTime() : 0;
-      const tb = b.published_at ? new Date(b.published_at).getTime() : 0;
-      return tb - ta;
-    })
-    .slice(0, 5);
-
   const avgScore = recommendations.length
     ? Math.round(
-        recommendations.reduce((sum, r) => sum + r.score, 0) / recommendations.length,
+        recommendations.reduce((sum, r) => sum + r.score, 0) /
+          recommendations.length,
       )
     : 0;
 
@@ -90,7 +74,9 @@ function DashboardContent() {
         <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
           <div>
             <h1 className="font-display text-3xl md:text-4xl font-bold tracking-tight">
-              {user ? `Bonjour ${displayUserName(user)} 👋` : "Tableau de bord 👋"}
+              {user
+                ? `Bonjour ${displayUserName(user)} 👋`
+                : "Tableau de bord 👋"}
             </h1>
             <p className="mt-1 text-slate-muted">
               {user
@@ -117,13 +103,16 @@ function DashboardContent() {
       </header>
 
       {error && (
-        <div role="alert" className="card p-4 border-flame-500/30 bg-flame-500/5 text-flame-600 text-sm">
-          ⚠️ Impossible de charger les offres : {error}. Le backend tourne-t-il sur{" "}
-          <code className="font-mono">{api.base}</code> ?
+        <div
+          role="alert"
+          className="card p-4 border-flame-500/30 bg-flame-500/5 text-flame-600 text-sm"
+        >
+          ⚠️ Impossible de charger les offres : {error}. Le backend tourne-t-il
+          sur <code className="font-mono">{api.base}</code> ?
         </div>
       )}
 
-      <section className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <section className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         {loading ? (
           <>
             <SkeletonStat />
@@ -154,59 +143,19 @@ function DashboardContent() {
               icon={<HeartIcon className="h-4 w-4" />}
               tone="amber"
             />
-            <StatCard
-              label="Sources"
-              value="1"
-              hint="WeLoveDevs · 1 req/s"
-              icon={<TrendingUpIcon className="h-4 w-4" />}
-              tone="flame"
-            />
           </>
         )}
       </section>
 
-      <section className="grid grid-cols-1 lg:grid-cols-3 gap-5">
-        <div className="card p-6 lg:col-span-2">
-          <SectionHeader
-            title="Offres par mois"
-            badge="DATA FEATURE"
-            badgeVariant="data"
-            icon={<TrendingUpIcon className="h-5 w-5" />}
-            description="Volume d'offres publiées sur les 6 derniers mois — utile pour savoir si le marché s'ouvre ou se referme."
-          />
-          {loading ? (
-            <div className="skeleton h-44" />
-          ) : (
-            <OffersPerMonth offers={offers} />
-          )}
-        </div>
-
-        <div className="card p-6">
-          <SectionHeader
-            title="Répartition contrats"
-            icon={<BriefcaseIcon className="h-5 w-5" />}
-            description="CDI, Stage, Alternance…"
-          />
-          {loading ? (
-            <div className="space-y-3">
-              <div className="skeleton h-4" />
-              <div className="skeleton h-4" />
-              <div className="skeleton h-4" />
-            </div>
-          ) : (
-            <ContractDistribution offers={offers} />
-          )}
-        </div>
-      </section>
-
       <section className="card p-6">
         <SectionHeader
-          title="Recommandations IA"
-          badge="AI FEATURE"
-          badgeVariant="ai"
+          title="Recommandations"
           icon={<SparklesIcon className="h-5 w-5" />}
           action={
-            <Link href="/offers" className="text-xs text-ink-700 font-semibold hover:underline">
+            <Link
+              href="/offers"
+              className="text-xs text-ink-700 font-semibold hover:underline"
+            >
               Voir tout →
             </Link>
           }
@@ -226,34 +175,6 @@ function DashboardContent() {
           </div>
         )}
       </section>
-
-      <section className="card p-6">
-        <SectionHeader
-          title="Dernières offres ingérées"
-          icon={<RefreshIcon className="h-5 w-5" />}
-          action={
-            <Link href="/offers" className="btn btn-ghost !py-2 !px-3 text-sm">
-              Tout voir
-              <ArrowRightIcon className="h-4 w-4" />
-            </Link>
-          }
-        />
-        {loading ? (
-          <div className="space-y-2">
-            <SkeletonCard />
-            <SkeletonCard />
-            <SkeletonCard />
-          </div>
-        ) : latest.length === 0 ? (
-          <EmptyState />
-        ) : (
-          <div className="space-y-1">
-            {latest.map((o) => (
-              <OfferRow key={o.id} offer={o} />
-            ))}
-          </div>
-        )}
-      </section>
     </div>
   );
 }
@@ -261,9 +182,12 @@ function DashboardContent() {
 function EmptyState() {
   return (
     <div className="rounded-xl border border-dashed border-slate-line p-8 text-center">
-      <div className="font-display font-bold text-lg">Aucune offre pour l&apos;instant</div>
+      <div className="font-display font-bold text-lg">
+        Aucune offre pour l&apos;instant
+      </div>
       <p className="mt-2 text-sm text-slate-muted">
-        Lancez une ingestion depuis la console admin pour récupérer les offres WeLoveDevs.
+        Lancez une ingestion depuis la console admin pour récupérer les offres
+        WeLoveDevs.
       </p>
     </div>
   );

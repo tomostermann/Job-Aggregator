@@ -29,22 +29,15 @@ interface NavItem {
 }
 
 const userNav: NavItem[] = [
-  { href: "/dashboard", label: "Dashboard", icon: <HomeIcon className="h-4 w-4" />, exact: true },
-  { href: "/offers", label: "Rechercher", icon: <SearchIcon className="h-4 w-4" /> },
-  { href: "/offers/new", label: "Créer une annonce", icon: <SparklesIcon className="h-4 w-4" /> },
-  { href: "/saved", label: "Favoris", icon: <HeartIcon className="h-4 w-4" /> },
-  { href: "/analytics", label: "Analytics", icon: <ChartIcon className="h-4 w-4" /> },
-  { href: "/settings", label: "Paramètres", icon: <SettingsIcon className="h-4 w-4" /> },
+  {
+    href: "/dashboard",
+    label: "Dashboard",
+    icon: <HomeIcon className="h-4 w-4" />,
+    exact: true,
+  },
 ];
 
-const adminNav: NavItem[] = [
-  { href: "/admin", label: "Vue d'ensemble", icon: <HomeIcon className="h-4 w-4" />, exact: true },
-  { href: "/admin/offers", label: "Offres", icon: <BriefcaseIcon className="h-4 w-4" /> },
-  { href: "/admin/users", label: "Utilisateurs", icon: <UsersIcon className="h-4 w-4" /> },
-  { href: "/admin/ingest", label: "Ingestion data", icon: <DatabaseIcon className="h-4 w-4" /> },
-  { href: "/admin/security", label: "Sécurité", icon: <ShieldIcon className="h-4 w-4" /> },
-  { href: "/admin/settings", label: "Configuration", icon: <SettingsIcon className="h-4 w-4" /> },
-];
+const adminNav: NavItem[] = [];
 
 export function Sidebar({ variant }: { variant: "user" | "admin" }) {
   const pathname = usePathname();
@@ -59,29 +52,33 @@ export function Sidebar({ variant }: { variant: "user" | "admin" }) {
   };
 
   const isActive = (it: NavItem) =>
-    it.exact ? pathname === it.href : pathname === it.href || pathname.startsWith(it.href + "/");
+    it.exact
+      ? pathname === it.href
+      : pathname === it.href || pathname.startsWith(it.href + "/");
 
   return (
     <aside className="hidden md:flex md:w-64 lg:w-72 shrink-0 border-r border-slate-line bg-white sticky top-0 h-screen flex-col">
-      <div className="px-5 pt-5 pb-3">
+      <div className="px-5 pt-5 pb-5">
         <Logo />
       </div>
 
       {variant === "admin" && (
-        <div className="mx-5 mb-3 rounded-xl border border-flame-500/40 bg-flame-500/10 px-3 py-2 text-xs font-semibold text-flame-600 flex items-center gap-2">
+        <div className="mx-5 mb-5 rounded-xl border border-flame-500/40 bg-flame-500/10 px-3 py-2 text-xs font-semibold text-flame-600 flex items-center gap-2">
           <ShieldIcon className="h-4 w-4" />
-          Mode Administration activé
+          Mode Administrateur
         </div>
       )}
 
       {variant === "user" && !user && (
-        <div className="mx-5 mb-3 rounded-xl border border-ink-200 bg-ink-50 px-3 py-2 text-xs text-ink-700 flex items-center gap-2">
-          <span className="h-1.5 w-1.5 rounded-full bg-ink-600 animate-ring" />
-          Mode visiteur — connectez-vous pour postuler
+        <div className="mx-5 mb-5 rounded-xl border border-ink-200 bg-ink-50 px-3 py-2 text-xs text-ink-700 flex items-center gap-2">
+          Connectez-vous pour postuler !
         </div>
       )}
 
-      <nav className="flex-1 px-3 space-y-1 overflow-y-auto" aria-label="Navigation">
+      <nav
+        className="flex-1 px-3 space-y-2 overflow-y-auto"
+        aria-label="Navigation"
+      >
         {items.map((it) => {
           const active = isActive(it);
           return (
@@ -154,7 +151,10 @@ export function Sidebar({ variant }: { variant: "user" | "admin" }) {
           </div>
         ) : (
           <div className="space-y-2">
-            <Link href="/login" className="btn btn-primary w-full !text-sm !py-2.5">
+            <Link
+              href="/login"
+              className="btn btn-primary w-full !text-sm !py-2.5"
+            >
               Se connecter
               <ArrowRightIcon className="h-4 w-4" />
             </Link>
@@ -173,10 +173,13 @@ export function Sidebar({ variant }: { variant: "user" | "admin" }) {
 
 export function MobileNav({ variant }: { variant: "user" | "admin" }) {
   const pathname = usePathname();
-  const items = variant === "admin" ? adminNav.slice(0, 4) : userNav.slice(0, 4);
+  const items =
+    variant === "admin" ? adminNav.slice(0, 4) : userNav.slice(0, 4);
 
   const isActive = (it: NavItem) =>
-    it.exact ? pathname === it.href : pathname === it.href || pathname.startsWith(it.href + "/");
+    it.exact
+      ? pathname === it.href
+      : pathname === it.href || pathname.startsWith(it.href + "/");
 
   return (
     <nav
