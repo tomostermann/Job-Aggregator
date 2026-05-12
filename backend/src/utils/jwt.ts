@@ -6,6 +6,8 @@ export interface JwtPayload {
   id: string;
   role: "user" | "admin";
   email?: string;
+  firstName?: string;
+  lastName?: string;
 }
 
 
