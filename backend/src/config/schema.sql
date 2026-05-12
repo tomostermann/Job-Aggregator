@@ -19,7 +19,8 @@ CREATE TABLE IF NOT EXISTS offers (
   salary TEXT,
   source VARCHAR(100),
   published_at TIMESTAMP,
-  created_at TIMESTAMP DEFAULT NOW()
+  created_at TIMESTAMP DEFAULT NOW(),
+  embedding BYTEA  -- vecteur float32 384 dims stocké en bytes (calculé par le microservice IA)
 );
 
 -- Saved offers by users
