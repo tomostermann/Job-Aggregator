@@ -21,6 +21,8 @@ export default function RegisterPage() {
   const { register } = useAuth();
   const { push } = useToast();
   const router = useRouter();
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
@@ -32,6 +34,13 @@ export default function RegisterPage() {
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+
+    const trimmedFirstName = firstName.trim();
+    const trimmedLastName = lastName.trim();
+    if (!trimmedFirstName || !trimmedLastName) {
+      setError("Prénom et nom sont requis");
+      return;
+    }
     if (password !== confirm) {
       setError("Les mots de passe ne correspondent pas");
       return;
@@ -40,10 +49,16 @@ export default function RegisterPage() {
       setError("Mot de passe trop faible : 8+ caractères, majuscule, chiffre.");
       return;
     }
+
     setLoading(true);
     try {
-      const u = await register(email.trim(), password);
-      push("Compte créé. Bienvenue !", "success");
+      const u = await register({
+        email: email.trim(),
+        password,
+        firstName: trimmedFirstName,
+        lastName: trimmedLastName,
+      });
+      push(`Bienvenue ${u.firstName ?? trimmedFirstName} !`, "success");
       router.push(u.role === "admin" ? "/admin" : "/dashboard");
     } catch (err) {
       setError(
@@ -53,14 +68,6 @@ export default function RegisterPage() {
       setLoading(false);
     }
   };
-
-  const segments = [
-    "bg-flame-500",
-    "bg-flame-500",
-    "bg-amber-400",
-    "bg-mint-500",
-    "bg-mint-600",
-  ];
 
   return (
     <AuthLayout active="register">
@@ -73,6 +80,41 @@ export default function RegisterPage() {
       </p>
 
       <form onSubmit={onSubmit} className="mt-8 space-y-4" noValidate>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label htmlFor="firstName" className="label">
+              Prénom
+            </label>
+            <input
+              id="firstName"
+              type="text"
+              required
+              autoComplete="given-name"
+              className="input"
+              placeholder="Jean"
+              value={firstName}
+              onChange={(e) => setFirstName(e.target.value)}
+              maxLength={100}
+            />
+          </div>
+          <div>
+            <label htmlFor="lastName" className="label">
+              Nom
+            </label>
+            <input
+              id="lastName"
+              type="text"
+              required
+              autoComplete="family-name"
+              className="input"
+              placeholder="Dupont"
+              value={lastName}
+              onChange={(e) => setLastName(e.target.value)}
+              maxLength={100}
+            />
+          </div>
+        </div>
+
         <div>
           <label htmlFor="email" className="label">
             Email
@@ -83,7 +125,7 @@ export default function RegisterPage() {
             required
             autoComplete="email"
             className="input"
-            placeholder="adresse@epitech.eu"
+            placeholder="jean.dupont@epitech.eu"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
           />

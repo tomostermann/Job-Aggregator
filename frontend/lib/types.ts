@@ -4,12 +4,16 @@ export interface AuthUser {
   id: string;
   email: string;
   role: Role;
+  firstName?: string;
+  lastName?: string;
 }
 
 export interface JwtPayload {
   id: string;
   role: Role;
   email?: string;
+  firstName?: string;
+  lastName?: string;
   iat?: number;
   exp?: number;
 }

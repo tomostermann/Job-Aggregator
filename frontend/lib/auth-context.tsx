@@ -12,12 +12,19 @@ import { api } from "./api";
 import { decodeJwt, isJwtExpired } from "./jwt";
 import type { AuthUser } from "./types";
 
+interface RegisterInput {
+  email: string;
+  password: string;
+  firstName: string;
+  lastName: string;
+}
+
 interface AuthContextValue {
   user: AuthUser | null;
   token: string | null;
   isLoading: boolean;
   login: (email: string, password: string) => Promise<AuthUser>;
-  register: (email: string, password: string) => Promise<AuthUser>;
+  register: (input: RegisterInput) => Promise<AuthUser>;
   logout: () => void;
 }
 
@@ -31,6 +38,8 @@ function userFromToken(token: string): AuthUser | null {
     id: decoded.id,
     email: decoded.email ?? "",
     role: decoded.role,
+    firstName: decoded.firstName,
+    lastName: decoded.lastName,
   };
 }
 
@@ -65,18 +74,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       persist(t);
       const u = userFromToken(t);
       if (!u) throw new Error("Invalid token returned by server");
-      return { ...u, email };
+      return u;
     },
     [persist],
   );
 
   const register = useCallback<AuthContextValue["register"]>(
-    async (email, password) => {
-      const { token: t } = await api.register(email, password);
+    async ({ email, password, firstName, lastName }) => {
+      const { token: t } = await api.register({
+        email,
+        password,
+        firstName,
+        lastName,
+      });
       persist(t);
       const u = userFromToken(t);
       if (!u) throw new Error("Invalid token returned by server");
-      return { ...u, email };
+      return u;
     },
     [persist],
   );

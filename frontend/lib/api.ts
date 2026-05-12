@@ -46,18 +46,13 @@ async function request<T>(
   return body as T;
 }
 
-interface AdminStats {
-  offersTotal: number;
-  usersTotal: number;
-  companiesTotal: number;
-  offersRecent: number;
-}
-
 interface AdminUser {
   id: string;
   email: string;
   role: "user" | "admin";
   created_at: string;
+  first_name?: string | null;
+  last_name?: string | null;
 }
 
 export const api = {
@@ -65,10 +60,15 @@ export const api = {
 
   health: () => request<{ status: string }>("/api/health"),
 
-  register: (email: string, password: string) =>
+  register: (input: {
+    email: string;
+    password: string;
+    firstName: string;
+    lastName: string;
+  }) =>
     request<{ token: string }>("/api/auth/register", {
       method: "POST",
-      body: JSON.stringify({ email, password }),
+      body: JSON.stringify(input),
     }),
 
   login: (email: string, password: string) =>
@@ -101,24 +101,34 @@ export const api = {
       token,
     ),
 
-  // Admin endpoints
-  adminStats: (token: string) => request<AdminStats>("/api/admin/stats", {}, token),
-
+  // Admin endpoints (alignés sur backend/src/admin/admin.routes.ts)
   adminUsers: (token: string) =>
-    request<{ data: AdminUser[]; total: number }>("/api/admin/users", {}, token),
+    request<AdminUser[]>("/api/admin/users", {}, token),
 
   adminSetUserRole: (token: string, id: string, role: "user" | "admin") =>
     request<AdminUser>(
-      `/api/admin/users/${id}/role`,
+      `/api/admin/users/${id}`,
       { method: "PATCH", body: JSON.stringify({ role }) },
       token,
     ),
 
-  adminDeleteUser: (token: string, id: string) =>
-    request<void>(`/api/admin/users/${id}`, { method: "DELETE" }, token),
-
   adminDeleteOffer: (token: string, id: string) =>
-    request<void>(`/api/admin/offers/${id}`, { method: "DELETE" }, token),
+    request<{ message: string }>(
+      `/api/admin/offers/${id}`,
+      { method: "DELETE" },
+      token,
+    ),
+
+  adminModerateOffer: (
+    token: string,
+    id: string,
+    status: "validated" | "rejected",
+  ) =>
+    request<{ id: string; title: string; status: string }>(
+      `/api/admin/offers/${id}`,
+      { method: "PATCH", body: JSON.stringify({ status }) },
+      token,
+    ),
 
   triggerIngest: (token: string) =>
     request<IngestResult>(
@@ -128,7 +138,7 @@ export const api = {
     ),
 };
 
-export type { AdminStats, AdminUser };
+export type { AdminUser };
 
 export class ApiError extends Error {
   status?: number;
