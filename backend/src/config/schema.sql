@@ -4,8 +4,14 @@ CREATE TABLE IF NOT EXISTS users (
   email VARCHAR(255) UNIQUE NOT NULL,
   password_hash VARCHAR(255) NOT NULL,
   role VARCHAR(50) DEFAULT 'user' CHECK (role IN ('user', 'admin')),
+  first_name VARCHAR(100),
+  last_name VARCHAR(100),
   created_at TIMESTAMP DEFAULT NOW()
 );
+
+-- Migration : ajoute first_name / last_name si la table existait déjà
+ALTER TABLE users ADD COLUMN IF NOT EXISTS first_name VARCHAR(100);
+ALTER TABLE users ADD COLUMN IF NOT EXISTS last_name VARCHAR(100);
 
 -- Offers
 CREATE TABLE IF NOT EXISTS offers (
