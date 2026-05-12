@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
+import { SectionHeader } from "@/components/SectionHeader";
 import {
   ArrowRightIcon,
   SparklesIcon,
@@ -8,7 +9,6 @@ import {
   ChartIcon,
   RefreshIcon,
   SearchIcon,
-  CheckIcon,
   BriefcaseIcon,
   EuroIcon,
 } from "@/components/Icons";
@@ -81,7 +81,7 @@ export default function Home() {
                   <ArrowRightIcon className="h-4 w-4" />
                 </Link>
                 <Link
-                  href="/"
+                  href="/offers"
                   className="btn btn-secondary !py-4 !px-6 !text-base"
                 >
                   <SearchIcon className="h-4 w-4" />
@@ -304,12 +304,13 @@ function DashboardMockup() {
       <div className="card p-5 shadow-pop space-y-4">
         <div className="flex items-center justify-between">
           <div>
-            <div className="font-display font-bold text-lg">
+            <div className="font-display font-bold text-xl md:text-2xl">
               Tableau de bord
             </div>
-            <div className="text-xs text-slate-muted">Bonjour Arthur 👋</div>
+            <div className="text-xs md:text-sm text-slate-muted">
+              Bonjour Jean 👋
+            </div>
           </div>
-          <span className="pill pill-flame text-[10px]">3 nouvelles</span>
         </div>
 
         <div className="grid grid-cols-3 gap-2.5">
@@ -336,65 +337,39 @@ function DashboardMockup() {
             </div>
           ))}
         </div>
-
         <div className="rounded-xl border border-slate-line p-3">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-semibold">Offres par mois</span>
+          <SectionHeader
+            title="Recommandations"
+            icon={<SparklesIcon className="h-5 w-5" />}
+            action={
+              <Link
+                href="/offers"
+                className="text-xs text-ink-700 font-semibold hover:underline"
+              >
+                Voir tout →
+              </Link>
+            }
+          />
+          <div className="space-y-2">
+            {[
+              { t: "Développeur Full-Stack", c: "Dataiku", s: 97 },
+              { t: "Stage DevOps", c: "OVHcloud", s: 89 },
+              { t: "Alternance Cyber", c: "Thales", s: 82 },
+            ].map((r) => (
+              <div key={r.t} className="flex items-center gap-2 text-xs">
+                <div className="h-7 w-7 rounded-md bg-ink-50 flex items-center justify-center font-bold text-ink-700">
+                  {r.c[0]}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="font-semibold truncate">{r.t}</div>
+                  <div className="text-[10px] text-slate-muted">{r.c}</div>
+                </div>
+                <span className="pill pill-mint text-[10px] font-mono">
+                  Score: {r.s}
+                </span>
+              </div>
+            ))}
           </div>
-          {(() => {
-            const months = [
-              { h: 45, l: "Mai" },
-              { h: 70, l: "Juin" },
-              { h: 55, l: "Juil." },
-              { h: 80, l: "Août" },
-              { h: 95, l: "Sept." },
-              { h: 100, l: "Oct." },
-            ];
-            return (
-              <>
-                <div className="flex items-end gap-1.5 h-16">
-                  {months.map((b, i) => (
-                    <div
-                      key={i}
-                      className="flex-1 rounded-t bg-gradient-to-t from-ink-600 to-ink-400"
-                      style={{ height: `${b.h}%` }}
-                    />
-                  ))}
-                </div>
-                <div className="flex gap-1.5 mt-1">
-                  {months.map((b, i) => (
-                    <div
-                      key={i}
-                      className="flex-1 text-[8px] font-mono text-slate-muted text-center"
-                    >
-                      {b.l}
-                    </div>
-                  ))}
-                </div>
-              </>
-            );
-          })()}
-        </div>
-
-        <div className="space-y-2">
-          {[
-            { t: "Développeur Full-Stack", c: "Dataiku", s: 97 },
-            { t: "Stage DevOps", c: "OVHcloud", s: 89 },
-            { t: "Alternance Cyber", c: "Thales", s: 82 },
-          ].map((r) => (
-            <div key={r.t} className="flex items-center gap-2 text-xs">
-              <div className="h-7 w-7 rounded-md bg-ink-50 flex items-center justify-center font-bold text-ink-700">
-                {r.c[0]}
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="font-semibold truncate">{r.t}</div>
-                <div className="text-[10px] text-slate-muted">{r.c}</div>
-              </div>
-              <span className="pill pill-mint text-[10px] font-mono">
-                Score: {r.s}
-              </span>
-            </div>
-          ))}
         </div>
       </div>
     </div>
