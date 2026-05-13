@@ -6,16 +6,9 @@ import { Logo } from "./Logo";
 import { useAuth } from "@/lib/auth-context";
 import {
   HomeIcon,
-  SearchIcon,
-  HeartIcon,
-  ChartIcon,
   SettingsIcon,
   ShieldIcon,
-  BriefcaseIcon,
-  UsersIcon,
-  DatabaseIcon,
   LogoutIcon,
-  SparklesIcon,
   ArrowRightIcon,
 } from "./Icons";
 import type { ReactNode } from "react";
@@ -34,6 +27,11 @@ const userNav: NavItem[] = [
     label: "Dashboard",
     icon: <HomeIcon className="h-4 w-4" />,
     exact: true,
+  },
+  {
+    href: "/settings",
+    label: "Paramètres",
+    icon: <SettingsIcon className="h-4 w-4" />,
   },
 ];
 

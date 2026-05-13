@@ -4,7 +4,7 @@ import Link from "next/link";
 import { AppShell } from "@/components/AppShell";
 import { useAuth } from "@/lib/auth-context";
 import { useSavedOffers } from "@/lib/saved-store";
-import { SettingsIcon, ShieldIcon, ArrowRightIcon } from "@/components/Icons";
+import { SettingsIcon, ArrowRightIcon } from "@/components/Icons";
 
 export default function SettingsPage() {
   return (
@@ -37,9 +37,12 @@ function Inner() {
       {!user && (
         <div className="card p-6 flex flex-col md:flex-row md:items-center justify-between gap-4 border-ink-200 bg-ink-50">
           <div>
-            <h2 className="font-display font-bold text-lg">Pas encore de compte ?</h2>
+            <h2 className="font-display font-bold text-lg">
+              Pas encore de compte ?
+            </h2>
             <p className="text-sm text-slate-muted mt-1">
-              Créez-en un pour synchroniser vos favoris, postuler aux offres et créer des annonces.
+              Créez-en un pour synchroniser vos favoris, postuler aux offres et
+              créer des annonces.
             </p>
           </div>
           <div className="flex gap-2">
@@ -66,35 +69,33 @@ function Inner() {
           />
           <Field label="Nom" value={user?.lastName || (user ? "—" : "—")} />
           <Field label="Email" value={user?.email || "—"} />
-          <Field label="Identifiant" value={user?.id ?? "—"} mono />
-          <Field label="Rôle" value={user?.role ?? "guest"} />
-          <Field label="Favoris (locaux)" value={`${ids.length} offre${ids.length > 1 ? "s" : ""}`} />
+          <Field
+            label="Favoris"
+            value={`${ids.length} offre${ids.length > 1 ? "s" : ""}`}
+          />
         </dl>
-      </section>
-
-      <section className="card p-6">
-        <div className="flex items-center gap-2 mb-4">
-          <ShieldIcon className="h-5 w-5 text-ink-700" />
-          <h2 className="font-display font-bold text-lg">Sécurité</h2>
-        </div>
-        <ul className="text-sm text-slate-muted space-y-1.5">
-          <li>· Mots de passe stockés en bcrypt (10 rounds)</li>
-          <li>· Authentification JWT signée côté serveur</li>
-          <li>· Validation des entrées et CORS activés</li>
-          <li>· Routes admin protégées par rôle (server-side)</li>
-        </ul>
       </section>
     </div>
   );
 }
 
-function Field({ label, value, mono }: { label: string; value: string; mono?: boolean }) {
+function Field({
+  label,
+  value,
+  mono,
+}: {
+  label: string;
+  value: string;
+  mono?: boolean;
+}) {
   return (
     <div className="rounded-xl border border-slate-line p-4">
       <dt className="text-[10px] font-mono uppercase tracking-widest text-slate-muted">
         {label}
       </dt>
-      <dd className={`mt-1 text-sm font-semibold ${mono ? "font-mono text-xs break-all" : ""}`}>
+      <dd
+        className={`mt-1 text-sm font-semibold ${mono ? "font-mono text-xs break-all" : ""}`}
+      >
         {value}
       </dd>
     </div>
