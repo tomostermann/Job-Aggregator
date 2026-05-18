@@ -55,31 +55,3 @@ export async function getOfferById(id: string) {
   );
   return result.rows[0] ?? null;
 }
-
-export interface CreateOfferInput {
-  title: string;
-  company: string | null;
-  location: string | null;
-  contract_type: string | null;
-  description: string | null;
-  salary: string | null;
-}
-
-export async function createOffer(input: CreateOfferInput) {
-  const sourceId = `user-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-  const result = await pool.query(
-    `INSERT INTO offers (source_id, title, company, location, contract_type, description, salary, source, published_at)
-     VALUES ($1, $2, $3, $4, $5, $6, $7, 'user', NOW())
-     RETURNING *`,
-    [
-      sourceId,
-      input.title,
-      input.company,
-      input.location,
-      input.contract_type,
-      input.description,
-      input.salary,
-    ],
-  );
-  return result.rows[0];
-}

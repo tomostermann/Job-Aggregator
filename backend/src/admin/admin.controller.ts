@@ -1,5 +1,10 @@
 import { Request, Response } from "express";
-import { getAllUsers, updateUserRole, deleteOffer, moderateOffer } from "./admin.service";
+import {
+  getAllUsers,
+  updateUserRole,
+  deleteOffer,
+  moderateOffer,
+} from "./admin.service";
 
 export const getUsersController = async (_req: Request, res: Response) => {
   try {
@@ -10,7 +15,10 @@ export const getUsersController = async (_req: Request, res: Response) => {
   }
 };
 
-export const updateUserRoleController = async (req: Request<{ id: string }>, res: Response) => {
+export const updateUserRoleController = async (
+  req: Request<{ id: string }>,
+  res: Response,
+) => {
   try {
     const user = await updateUserRole(req.params.id, req.body.role);
     res.status(200).json(user);
@@ -19,7 +27,10 @@ export const updateUserRoleController = async (req: Request<{ id: string }>, res
   }
 };
 
-export const deleteOfferController = async (req: Request<{ id: string }>, res: Response) => {
+export const deleteOfferController = async (
+  req: Request<{ id: string }>,
+  res: Response,
+) => {
   try {
     await deleteOffer(req.params.id);
     res.status(200).json({ message: "Offer deleted" });
@@ -28,7 +39,10 @@ export const deleteOfferController = async (req: Request<{ id: string }>, res: R
   }
 };
 
-export const moderateOfferController = async (req: Request<{ id: string }>, res: Response) => {
+export const moderateOfferController = async (
+  req: Request<{ id: string }>,
+  res: Response,
+) => {
   try {
     const offer = await moderateOffer(req.params.id, req.body.status);
     res.status(200).json(offer);

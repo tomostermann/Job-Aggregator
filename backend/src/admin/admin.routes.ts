@@ -1,7 +1,12 @@
 import { Router, Request, Response } from "express";
 import { authMiddleware } from "../middlewares/auth.middleware";
 import { roleMiddleware } from "../middlewares/role.middleware";
-import { getUsersController, updateUserRoleController, deleteOfferController, moderateOfferController } from "./admin.controller";
+import {
+  getUsersController,
+  updateUserRoleController,
+  deleteOfferController,
+  moderateOfferController,
+} from "./admin.controller";
 
 const router = Router();
 
