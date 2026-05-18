@@ -5,12 +5,25 @@ import type { Offer } from "@/lib/types";
 import { CompanyAvatar } from "./CompanyAvatar";
 import { computeOfferScore, isGhostJob, extractTags } from "@/lib/score";
 import { formatRelativeDate } from "@/lib/format";
-import { ArrowRightIcon, AlertIcon, MapPinIcon, BriefcaseIcon, CalendarIcon, EuroIcon } from "./Icons";
+import {
+  ArrowRightIcon,
+  AlertIcon,
+  MapPinIcon,
+  BriefcaseIcon,
+  CalendarIcon,
+  EuroIcon,
+} from "./Icons";
 import { useSavedOffers } from "@/lib/saved-store";
 import { useAuthGate } from "@/lib/auth-gate";
 import { HeartIcon, HeartFillIcon } from "./Icons";
 
-export function OfferCard({ offer, compact = false }: { offer: Offer; compact?: boolean }) {
+export function OfferCard({
+  offer,
+  compact = false,
+}: {
+  offer: Offer;
+  compact?: boolean;
+}) {
   const score = computeOfferScore(offer);
   const ghost = isGhostJob(offer);
   const tags = extractTags(offer);
@@ -42,7 +55,9 @@ export function OfferCard({ offer, compact = false }: { offer: Offer; compact?: 
               </div>
               <div className="mt-1.5 text-sm text-slate-muted flex flex-wrap items-center gap-x-3 gap-y-1">
                 {offer.company && (
-                  <span className="font-medium text-slate-ink">{offer.company}</span>
+                  <span className="font-medium text-slate-ink">
+                    {offer.company}
+                  </span>
                 )}
                 {offer.location && (
                   <span className="flex items-center gap-1">
@@ -79,15 +94,6 @@ export function OfferCard({ offer, compact = false }: { offer: Offer; compact?: 
             </div>
 
             <div className="flex flex-col items-end gap-3 shrink-0">
-              <div className="text-right">
-                <div className="text-[10px] font-mono tracking-widest uppercase text-slate-muted">
-                  Score IA
-                </div>
-                <div className={`font-display text-xl font-bold ${scoreColor(score)}`}>
-                  {score}
-                  <span className="text-xs text-slate-muted font-medium"> /100</span>
-                </div>
-              </div>
               <button
                 type="button"
                 onClick={() => {
@@ -102,7 +108,11 @@ export function OfferCard({ offer, compact = false }: { offer: Offer; compact?: 
                     : "border-slate-line text-slate-muted hover:text-flame-600 hover:border-flame-500/30"
                 }`}
               >
-                {saved ? <HeartFillIcon className="h-4 w-4" /> : <HeartIcon className="h-4 w-4" />}
+                {saved ? (
+                  <HeartFillIcon className="h-4 w-4" />
+                ) : (
+                  <HeartIcon className="h-4 w-4" />
+                )}
               </button>
             </div>
           </div>
@@ -110,16 +120,25 @@ export function OfferCard({ offer, compact = false }: { offer: Offer; compact?: 
           {ghost && (
             <div className="mt-3 flex items-center gap-2 rounded-lg bg-amber-50 border border-amber-200 px-3 py-2 text-xs text-amber-700">
               <AlertIcon className="h-3.5 w-3.5 shrink-0" />
-              Non mise à jour depuis plus de 60 jours — vérifiez si le poste est encore ouvert.
+              Non mise à jour depuis plus de 60 jours — vérifiez si le poste est
+              encore ouvert.
             </div>
           )}
         </div>
       </div>
 
-      <div className="mt-4 flex items-center justify-between gap-2 pt-4 border-t border-slate-line">
-        <span className="text-xs text-slate-muted font-mono">
-          source : {offer.source ?? "welovedevs"}
-        </span>
+      <div className="mt-4 ml-4 flex items-center justify-between gap-2">
+        <div className="text-right">
+          <div className="text-[10px] font-mono tracking-widest uppercase text-slate-muted">
+            Score IA
+          </div>
+          <div
+            className={`font-display text-xl font-bold ${scoreColor(score)}`}
+          >
+            {score}
+            <span className="text-xs text-slate-muted font-medium"> /100</span>
+          </div>
+        </div>
         <Link
           href={`/offers/${offer.id}`}
           className="btn btn-primary !py-2 !px-4 !text-sm"
@@ -157,7 +176,9 @@ export function OfferRow({ offer }: { offer: Offer }) {
       <span className="pill pill-slate text-[11px] font-mono">
         {offer.contract_type?.split(",")[0]?.trim() || "Job"}
       </span>
-      <div className={`text-sm font-bold ${scoreColor(score)} font-display tabular-nums`}>
+      <div
+        className={`text-sm font-bold ${scoreColor(score)} font-display tabular-nums`}
+      >
         IA {score}
       </div>
     </Link>

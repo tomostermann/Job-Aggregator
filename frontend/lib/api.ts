@@ -136,6 +136,31 @@ export const api = {
       { method: "POST", body: JSON.stringify({}) },
       token,
     ),
+
+  // Favoris (auth required, persistés sur le compte)
+  getSavedOffers: (token: string) =>
+    request<Offer[]>("/api/saved", {}, token),
+
+  saveOffer: (token: string, offerId: string) =>
+    request<{ saved: boolean; inserted: boolean }>(
+      "/api/saved",
+      { method: "POST", body: JSON.stringify({ offerId }) },
+      token,
+    ),
+
+  unsaveOffer: (token: string, offerId: string) =>
+    request<void>(
+      `/api/saved/${offerId}`,
+      { method: "DELETE" },
+      token,
+    ),
+
+  migrateSavedOffers: (token: string, offerIds: string[]) =>
+    request<{ inserted: number; requested: number }>(
+      "/api/saved/migrate",
+      { method: "POST", body: JSON.stringify({ offerIds }) },
+      token,
+    ),
 };
 
 export type { AdminUser };
