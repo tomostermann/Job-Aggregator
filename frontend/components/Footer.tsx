@@ -17,13 +17,13 @@ export function Footer() {
           <h3 className="font-semibold text-slate-ink mb-2">Produit</h3>
           <ul className="space-y-1.5 text-slate-muted">
             <li>
-              <Link href="/offers" className="hover:text-ink-700">
-                Rechercher des offres
+              <Link href="/dashboard" className="hover:text-ink-700">
+                Dashboard
               </Link>
             </li>
             <li>
-              <Link href="/dashboard" className="hover:text-ink-700">
-                Dashboard
+              <Link href="/offers" className="hover:text-ink-700">
+                Rechercher des offres
               </Link>
             </li>
             <li>

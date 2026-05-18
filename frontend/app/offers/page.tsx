@@ -47,6 +47,8 @@ function OffersInner() {
     contractTypes: [],
     location: "",
     remoteOnly: false,
+    stageMin: "",
+    stageMax: "",
   });
 
   // Debounce de la recherche
@@ -96,6 +98,9 @@ function OffersInner() {
   }, [debounced, filters.location, page]);
 
   const filtered = useMemo(() => {
+    const fMin = filters.stageMin ? Number(filters.stageMin) : null;
+    const fMax = filters.stageMax ? Number(filters.stageMax) : null;
+    const stageActive = fMin !== null || fMax !== null;
     return offers.filter((o) => {
       if (filters.contractTypes.length) {
         const ct = (o.contract_type ?? "").toLowerCase();
@@ -109,9 +114,26 @@ function OffersInner() {
         if (!hay.includes("remote") && !hay.includes("télétravail"))
           return false;
       }
+      if (stageActive) {
+        const m = (o.description ?? "").match(
+          /Stage\s*:\s*(\d+)(?:\s*à\s*(\d+))?\s*mois/i,
+        );
+        if (!m) return false;
+        const oMin = Number(m[1]);
+        const oMax = m[2] ? Number(m[2]) : oMin;
+        const lo = fMin ?? -Infinity;
+        const hi = fMax ?? Infinity;
+        if (oMax < lo || oMin > hi) return false;
+      }
       return true;
     });
-  }, [offers, filters.contractTypes, filters.remoteOnly]);
+  }, [
+    offers,
+    filters.contractTypes,
+    filters.remoteOnly,
+    filters.stageMin,
+    filters.stageMax,
+  ]);
 
   const sorted = useMemo(() => {
     const copy = [...filtered];
@@ -135,7 +157,13 @@ function OffersInner() {
   }, [filtered, sort]);
 
   const reset = () =>
-    setFilters({ contractTypes: [], location: "", remoteOnly: false });
+    setFilters({
+      contractTypes: [],
+      location: "",
+      remoteOnly: false,
+      stageMin: "",
+      stageMax: "",
+    });
 
   const loadMore = useCallback(() => {
     if (loadingMore) return;
@@ -145,7 +173,20 @@ function OffersInner() {
   const loadedCount = offers.length;
   const hasMore = loadedCount < total;
   const clientFilteringActive =
-    filters.contractTypes.length > 0 || filters.remoteOnly;
+    filters.contractTypes.length > 0 ||
+    filters.remoteOnly ||
+    !!filters.stageMin ||
+    !!filters.stageMax;
+  const stageRangeLabel =
+    filters.stageMin || filters.stageMax
+      ? filters.stageMin && filters.stageMax && filters.stageMin !== filters.stageMax
+        ? `${filters.stageMin}-${filters.stageMax} mois`
+        : filters.stageMin && filters.stageMax
+          ? `${filters.stageMin} mois`
+          : filters.stageMin
+            ? `≥ ${filters.stageMin} mois`
+            : `≤ ${filters.stageMax} mois`
+      : "";
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-[260px_1fr] gap-6 lg:gap-8">
@@ -192,6 +233,7 @@ function OffersInner() {
               {(filters.contractTypes.length > 0 ||
                 filters.location ||
                 filters.remoteOnly ||
+                stageRangeLabel ||
                 debounced) && (
                 <>
                   {" · "}
@@ -200,6 +242,7 @@ function OffersInner() {
                     {[
                       debounced && `« ${debounced} »`,
                       filters.contractTypes.join(", "),
+                      stageRangeLabel,
                       filters.location,
                       filters.remoteOnly && "Remote",
                     ]

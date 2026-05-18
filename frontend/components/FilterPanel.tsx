@@ -7,9 +7,13 @@ export interface Filters {
   contractTypes: string[];
   location: string;
   remoteOnly: boolean;
+  stageMin: string;
+  stageMax: string;
 }
 
 const CONTRACT_OPTIONS = ["CDI", "CDD", "Stage", "Alternance", "Freelance"];
+
+const STAGE_DURATION_MONTHS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
 
 export function FilterPanel({
   filters,
@@ -56,20 +60,67 @@ export function FilterPanel({
                   type="checkbox"
                   className="h-4 w-4 accent-ink-600"
                   checked={checked}
-                  onChange={() =>
+                  onChange={() => {
+                    const nextContracts = checked
+                      ? filters.contractTypes.filter((x) => x !== c)
+                      : [...filters.contractTypes, c];
                     onChange({
                       ...filters,
-                      contractTypes: checked
-                        ? filters.contractTypes.filter((x) => x !== c)
-                        : [...filters.contractTypes, c],
-                    })
-                  }
+                      contractTypes: nextContracts,
+                      ...(c === "Stage" && checked
+                        ? { stageMin: "", stageMax: "" }
+                        : {}),
+                    });
+                  }}
                 />
                 <span>{c}</span>
               </label>
             );
           })}
         </div>
+        {filters.contractTypes.includes("Stage") && (
+          <div className="mt-3">
+            <label htmlFor="filter-stage-min" className="label">
+              Durée du stage
+            </label>
+            <div className="flex items-center gap-2 flex-wrap">
+              <select
+                id="filter-stage-min"
+                className="input !w-16 !py-1 !px-2 !text-sm"
+                value={filters.stageMin}
+                onChange={(e) =>
+                  onChange({ ...filters, stageMin: e.target.value })
+                }
+              >
+                <option value="">—</option>
+                {STAGE_DURATION_MONTHS.map((n) => (
+                  <option key={n} value={n}>
+                    {n}
+                  </option>
+                ))}
+              </select>
+              <span className="text-sm text-slate-muted">à</span>
+              <select
+                aria-label="Durée maximum"
+                className="input !w-16 !py-1 !px-2 !text-sm"
+                value={filters.stageMax}
+                onChange={(e) =>
+                  onChange({ ...filters, stageMax: e.target.value })
+                }
+              >
+                <option value="">—</option>
+                {STAGE_DURATION_MONTHS.map((n) => (
+                  <option key={n} value={n}>
+                    {n}
+                  </option>
+                ))}
+              </select>
+              <span className="text-sm font-semibold text-slate-muted">
+                mois
+              </span>
+            </div>
+          </div>
+        )}
       </div>
 
       <div>
@@ -122,7 +173,10 @@ export function FilterPanelMobile({
 }) {
   const [open, setOpen] = useState(false);
   const activeCount =
-    filters.contractTypes.length + (filters.location ? 1 : 0) + (filters.remoteOnly ? 1 : 0);
+    filters.contractTypes.length +
+    (filters.location ? 1 : 0) +
+    (filters.remoteOnly ? 1 : 0) +
+    (filters.stageMin || filters.stageMax ? 1 : 0);
 
   return (
     <>
