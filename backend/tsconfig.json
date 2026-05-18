@@ -8,12 +8,12 @@
     "esModuleInterop": true,
     "allowJs": true,
     "baseUrl": "./",
-    "skipLibCheck": true,
     "paths": {
       "@/*": ["src/*"]
     },
+    "ignoreDeprecations": "6.0",
     "types": ["jest", "node"]
   },
   "include": ["src/**/*", "tests/**/*"],
-  "exclude": ["node_modules", "dist"]   
+  "exclude": ["node_modules", "dist"]
 }
