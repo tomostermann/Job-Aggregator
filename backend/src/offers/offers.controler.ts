@@ -34,9 +34,12 @@ export async function postOffer(req: Request, res: Response) {
   try {
     const body = req.body as Record<string, unknown>;
     const title = typeof body.title === "string" ? body.title.trim() : "";
+
+
     if (!title || title.length < 4) {
-      return res.status(400).json({ error: "Le titre est requis (4+ caractÃ¨res)" });
+      return res.status(400).json({ error: "Le titre est requis (4+ caractères)" });
     }
+
     const offer = await createOffer({
       title,
       company: typeof body.company === "string" ? body.company.trim() : null,
@@ -45,6 +48,7 @@ export async function postOffer(req: Request, res: Response) {
       description: typeof body.description === "string" ? body.description.trim() : null,
       salary: typeof body.salary === "string" ? body.salary.trim() : null,
     });
+
     res.status(201).json(offer);
   } catch (err) {
     console.error("[Offers] postOffer error:", err);

@@ -1,7 +1,7 @@
 require('module-alias/register');
 const { normalizeOffer, stripHtml } = require('@/data/normalizer');
 
-// Offre brute réaliste basée sur la vraie structure WeLoveDevs
+
 const mockOffer = {
   id: "-NzXrt3saSop7HS6YEKK",
   objectID: "-NzXrt3saSop7HS6YEKK",
@@ -34,6 +34,13 @@ describe('normalizeOffer', () => {
     expect(result.source_id).toBe('-NzXrt3saSop7HS6YEKK');
   });
 
+
+  test('fallback source_id sur objectID si id absent', () => {
+    const { id, ...withoutId } = mockOffer;
+    const result = normalizeOffer(withoutId);
+    expect(result.source_id).toBe('-NzXrt3saSop7HS6YEKK');
+  });
+
   test('extrait le titre correctement', () => {
     const result = normalizeOffer(mockOffer);
     expect(result.title).toBe('Senior Back-End Developer');
@@ -55,9 +62,24 @@ describe('normalizeOffer', () => {
     expect(result.location).toBe("Villeneuve-d'Ascq, France");
   });
 
+
+  test('extrait published_at depuis publishDate', () => {
+    const result = normalizeOffer(mockOffer);
+    expect(result.published_at).toBe(1776766986369000);
+  });
+
   test('formate le salaire min/max avec recurrence year', () => {
     const result = normalizeOffer(mockOffer);
     expect(result.salary).toBe('45 - 60 k€/an');
+  });
+
+
+  test('formate le salaire min seul', () => {
+    const result = normalizeOffer({
+      ...mockOffer,
+      details: { salary: { min: 45, currency: '€', recurrence: 'year' } }
+    });
+    expect(result.salary).toBe('45+ k€/an');
   });
 
   test('retourne null si pas de salaire', () => {
