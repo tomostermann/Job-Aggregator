@@ -142,6 +142,10 @@ def score_offers(req: ScoreRequest):
     if not rows:
         return []
 
+    # Extrait les mots de la requête pour le boost de localisation
+    # Ex: "stage paris python" → ["stage", "paris", "python"]
+    query_words = [w.lower().strip() for w in req.query.split() if len(w) > 2]
+
     # Étape 3 : calcul de la cosine similarity pour chaque offre
     results = []
     for row in rows:
@@ -159,7 +163,15 @@ def score_offers(req: ScoreRequest):
         # Cosine similarity = produit scalaire (puisque les vecteurs sont normalisés)
         # Résultat entre -1 et 1, on multiplie par 100 pour avoir 0-100
         similarity = float(np.dot(query_embedding, embedding_normalized))
-        ai_score = max(0, min(100, int(similarity * 100)))
+        base_score = similarity * 100
+
+        # Boost de localisation : +30% si un mot de la requête apparaît dans la ville
+        location_text = (location or "").lower()
+        location_match = any(word in location_text for word in query_words)
+        if location_match:
+            base_score *= 1.3
+
+        ai_score = max(0, min(100, int(base_score)))
 
         results.append(
             ScoreResult(
@@ -173,6 +185,6 @@ def score_offers(req: ScoreRequest):
             )
         )
 
-    # Trie par score décroissant et retourne les `limit(10) meilleurs
+    # Trie par score décroissant et retourne les `limit` meilleurs
     results.sort(key=lambda x: x.ai_score, reverse=True)
     return results[: req.limit]

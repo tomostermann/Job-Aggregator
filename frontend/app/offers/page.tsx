@@ -67,13 +67,33 @@ function OffersInner() {
     if (isInitial) setLoading(true);
     else setLoadingMore(true);
 
-    api
-      .listOffers({
-        q: debounced || undefined,
-        location: filters.location || undefined,
-        size: PAGE_SIZE,
-        page,
-      })
+    // Mode IA avec recherche → appel microservice IA
+    const useIA = sort === "ia" && debounced.length > 0;
+
+    const fetchData = useIA
+      ? api.recommendations(debounced, 50).then((results) => ({
+          data: results.map((r) => ({
+            id: r.id,
+            title: r.title,
+            company: r.company,
+            location: r.location,
+            contract_type: r.contract_type,
+            salary: r.salary,
+            published_at: null,
+            ai_score: r.ai_score,
+          })),
+          total: results.length,
+          page: 0,
+          size: results.length,
+        }))
+      : api.listOffers({
+          q: debounced || undefined,
+          location: filters.location || undefined,
+          size: PAGE_SIZE,
+          page,
+        });
+
+    fetchData
       .then((res) => {
         if (cancelled) return;
         setTotal(res.total);
@@ -93,7 +113,7 @@ function OffersInner() {
     return () => {
       cancelled = true;
     };
-  }, [debounced, filters.location, page]);
+  }, [debounced, filters.location, page, sort]);
 
   const filtered = useMemo(() => {
     return offers.filter((o) => {

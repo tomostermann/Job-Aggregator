@@ -28,6 +28,9 @@ function hashSeed(value: string): number {
 }
 
 export function computeOfferScore(offer: Offer, keywords: string[] = DEFAULT_KEYWORDS): number {
+  // Score réel du microservice IA — prioritaire sur le calcul local
+  if (typeof offer.ai_score === "number") return offer.ai_score;
+
   const text = `${offer.title} ${offer.description ?? ""} ${offer.contract_type ?? ""}`.toLowerCase();
   const matches = keywords.filter((k) => text.includes(k)).length;
   const keywordScore = Math.min(40, matches * 6);

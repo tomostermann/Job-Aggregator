@@ -5,6 +5,7 @@ import initDb from "./config/initDb";
 import authRoutes from "./auth/auth.routes";
 import ingestRouter from "./routes/ingest";
 import offersRouter from "./routes/offers";
+import recommendationsRouter from "./routes/recommendations";
 
 dotenv.config();
 initDb();
@@ -22,6 +23,7 @@ app.get("/api/health", (_req, res) => {
 
 app.use("/api/auth", authRoutes);
 app.use("/api/admin/ingest", ingestRouter);
+app.use("/api/recommendations", recommendationsRouter);
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
