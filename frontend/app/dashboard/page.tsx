@@ -12,7 +12,6 @@ import { api } from "@/lib/api";
 import type { Offer } from "@/lib/types";
 import { useAuth } from "@/lib/auth-context";
 import { useSavedOffers } from "@/lib/saved-store";
-import { computeOfferScore } from "@/lib/score";
 import { displayUserName } from "@/lib/format";
 
 export default function DashboardPage() {
@@ -23,23 +22,41 @@ export default function DashboardPage() {
   );
 }
 
+// Requête générique utilisée pour les recommandations du dashboard
+const DEFAULT_QUERY = "développeur web fullstack stage CDI";
+
 function DashboardContent() {
   const { user } = useAuth();
   const { ids: savedIds } = useSavedOffers();
-  const [offers, setOffers] = useState<Offer[]>([]);
   const [total, setTotal] = useState(0);
+  const [recommendations, setRecommendations] = useState<Offer[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
-    api
-      .listOffers({ size: 100 })
-      .then((res) => {
+
+    // Chargement en parallèle : total des offres + recommandations IA
+    Promise.all([
+      api.listOffers({ size: 1 }),
+      api.recommendations(DEFAULT_QUERY, 4),
+    ])
+      .then(([list, iaResults]) => {
         if (cancelled) return;
-        setOffers(res.data);
-        setTotal(res.total);
+        setTotal(list.total);
+        setRecommendations(
+          iaResults.map((r) => ({
+            id: r.id,
+            title: r.title,
+            company: r.company,
+            location: r.location,
+            contract_type: r.contract_type,
+            salary: r.salary,
+            published_at: null,
+            ai_score: r.ai_score,
+          })),
+        );
       })
       .catch((err) => {
         if (cancelled) return;
@@ -48,19 +65,15 @@ function DashboardContent() {
       .finally(() => {
         if (!cancelled) setLoading(false);
       });
+
     return () => {
       cancelled = true;
     };
   }, []);
 
-  const recommendations = [...offers]
-    .map((o) => ({ offer: o, score: computeOfferScore(o) }))
-    .sort((a, b) => b.score - a.score)
-    .slice(0, 4);
-
   const avgScore = recommendations.length
     ? Math.round(
-        recommendations.reduce((sum, r) => sum + r.score, 0) /
+        recommendations.reduce((sum, r) => sum + (r.ai_score ?? 0), 0) /
           recommendations.length,
       )
     : 0;
@@ -169,7 +182,7 @@ function DashboardContent() {
           <EmptyState />
         ) : (
           <div className="space-y-1">
-            {recommendations.map(({ offer }) => (
+            {recommendations.map((offer) => (
               <OfferRow key={offer.id} offer={offer} />
             ))}
           </div>

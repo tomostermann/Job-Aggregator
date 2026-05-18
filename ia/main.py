@@ -161,9 +161,9 @@ def score_offers(req: ScoreRequest):
         embedding_normalized = embedding / norm
 
         # Cosine similarity = produit scalaire (puisque les vecteurs sont normalisés)
-        # Résultat entre -1 et 1, on multiplie par 100 pour avoir 0-100
+        # On applique sqrt() pour étaler les scores : sqrt(0.5)*100=70 au lieu de 50
         similarity = float(np.dot(query_embedding, embedding_normalized))
-        base_score = similarity * 100
+        base_score = float(np.sqrt(max(0.0, similarity))) * 100
 
         # Boost de localisation : +30% si un mot de la requête apparaît dans la ville
         location_text = (location or "").lower()
