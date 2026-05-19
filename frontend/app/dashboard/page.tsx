@@ -7,13 +7,19 @@ import { StatCard } from "@/components/StatCard";
 import { SectionHeader } from "@/components/SectionHeader";
 import { OfferRow } from "@/components/OfferCard";
 import { SkeletonCard, SkeletonStat } from "@/components/SkeletonCard";
-import { BriefcaseIcon, SparklesIcon, HeartIcon } from "@/components/Icons";
+import {
+  BriefcaseIcon,
+  SparklesIcon,
+  HeartIcon,
+  ArrowRightIcon,
+} from "@/components/Icons";
 import { api } from "@/lib/api";
 import type { Offer } from "@/lib/types";
 import { useAuth } from "@/lib/auth-context";
 import { useSavedOffers } from "@/lib/saved-store";
-import { computeOfferScore } from "@/lib/score";
 import { displayUserName } from "@/lib/format";
+
+const PREVIEW_COUNT = 4;
 
 export default function DashboardPage() {
   return (
@@ -24,21 +30,21 @@ export default function DashboardPage() {
 }
 
 function DashboardContent() {
-  const { user } = useAuth();
-  const { ids: savedIds } = useSavedOffers();
-  const [offers, setOffers] = useState<Offer[]>([]);
+  const { user, token } = useAuth();
+  const { ids: savedIds, isAuthed } = useSavedOffers();
   const [total, setTotal] = useState(0);
-  const [loading, setLoading] = useState(true);
+  const [loadingTotal, setLoadingTotal] = useState(true);
+  const [savedOffers, setSavedOffers] = useState<Offer[]>([]);
+  const [loadingSaved, setLoadingSaved] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
-    setLoading(true);
+    setLoadingTotal(true);
     api
-      .listOffers({ size: 100 })
+      .listOffers({ size: 1 })
       .then((res) => {
         if (cancelled) return;
-        setOffers(res.data);
         setTotal(res.total);
       })
       .catch((err) => {
@@ -46,24 +52,52 @@ function DashboardContent() {
         setError(err instanceof Error ? err.message : "Erreur de chargement");
       })
       .finally(() => {
-        if (!cancelled) setLoading(false);
+        if (!cancelled) setLoadingTotal(false);
       });
     return () => {
       cancelled = true;
     };
   }, []);
 
-  const recommendations = [...offers]
-    .map((o) => ({ offer: o, score: computeOfferScore(o) }))
-    .sort((a, b) => b.score - a.score)
-    .slice(0, 4);
+  useEffect(() => {
+    let cancelled = false;
+    setLoadingSaved(true);
 
-  const avgScore = recommendations.length
-    ? Math.round(
-        recommendations.reduce((sum, r) => sum + r.score, 0) /
-          recommendations.length,
-      )
-    : 0;
+    if (isAuthed && token) {
+      api
+        .getSavedOffers(token)
+        .then((data) => {
+          if (!cancelled) setSavedOffers(data);
+        })
+        .catch(() => {
+          if (!cancelled) setSavedOffers([]);
+        })
+        .finally(() => {
+          if (!cancelled) setLoadingSaved(false);
+        });
+      return () => {
+        cancelled = true;
+      };
+    }
+
+    if (savedIds.length === 0) {
+      setSavedOffers([]);
+      setLoadingSaved(false);
+      return;
+    }
+    Promise.allSettled(savedIds.map((id) => api.getOffer(id))).then((res) => {
+      if (cancelled) return;
+      const ok: Offer[] = [];
+      for (const r of res) {
+        if (r.status === "fulfilled") ok.push(r.value);
+      }
+      setSavedOffers(ok);
+      setLoadingSaved(false);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [savedIds, isAuthed, token]);
 
   return (
     <div className="space-y-8">
@@ -80,7 +114,7 @@ function DashboardContent() {
             </h1>
             <p className="mt-1 text-slate-muted">
               {user
-                ? "Voici vos recommandations du jour basées sur l'ensemble des offres ingérées."
+                ? "Retrouvez vos offres sauvegardées et l'activité du marché."
                 : "Aperçu public du marché tech. Connectez-vous pour postuler ou créer une annonce."}
             </p>
           </div>
@@ -112,11 +146,9 @@ function DashboardContent() {
         </div>
       )}
 
-      <section className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        {loading ? (
+      <section className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {loadingTotal ? (
           <>
-            <SkeletonStat />
-            <SkeletonStat />
             <SkeletonStat />
             <SkeletonStat />
           </>
@@ -128,13 +160,6 @@ function DashboardContent() {
               hint={`+ ${Math.max(0, Math.floor(total / 30))} ces 7 derniers jours`}
               icon={<BriefcaseIcon className="h-4 w-4" />}
               tone="ink"
-            />
-            <StatCard
-              label="Score IA moyen"
-              value={`${avgScore}%`}
-              hint="sur vos recommandations"
-              icon={<SparklesIcon className="h-4 w-4" />}
-              tone="mint"
             />
             <StatCard
               label="Favoris"
@@ -149,27 +174,29 @@ function DashboardContent() {
 
       <section className="card p-6">
         <SectionHeader
-          title="Recommandations"
-          icon={<SparklesIcon className="h-5 w-5" />}
+          title="Mes favoris"
+          icon={<HeartIcon className="h-5 w-5" />}
           action={
-            <Link
-              href="/offers"
-              className="text-xs text-ink-700 font-semibold hover:underline"
-            >
-              Voir tout →
-            </Link>
+            savedOffers.length > PREVIEW_COUNT ? (
+              <Link
+                href="/saved"
+                className="text-xs text-ink-700 font-semibold hover:underline"
+              >
+                Voir tout →
+              </Link>
+            ) : null
           }
         />
-        {loading ? (
+        {loadingSaved ? (
           <div className="space-y-2">
             <SkeletonCard />
             <SkeletonCard />
           </div>
-        ) : recommendations.length === 0 ? (
-          <EmptyState />
+        ) : savedOffers.length === 0 ? (
+          <EmptyFavorites authed={!!user} />
         ) : (
           <div className="space-y-1">
-            {recommendations.map(({ offer }) => (
+            {savedOffers.slice(0, PREVIEW_COUNT).map((offer) => (
               <OfferRow key={offer.id} offer={offer} />
             ))}
           </div>
@@ -179,16 +206,24 @@ function DashboardContent() {
   );
 }
 
-function EmptyState() {
+function EmptyFavorites({ authed }: { authed: boolean }) {
   return (
     <div className="rounded-xl border border-dashed border-slate-line p-8 text-center">
-      <div className="font-display font-bold text-lg">
-        Aucune offre pour l&apos;instant
+      <div className="mx-auto h-12 w-12 rounded-2xl bg-ink-50 flex items-center justify-center text-ink-700 mb-3">
+        <HeartIcon className="h-5 w-5" />
       </div>
-      <p className="mt-2 text-sm text-slate-muted">
-        Lancez une ingestion depuis la console admin pour récupérer les offres
-        WeLoveDevs.
+      <div className="font-display font-bold text-lg">
+        Aucune offre sauvegardée
+      </div>
+      <p className="mt-2 text-sm text-slate-muted max-w-sm mx-auto">
+        {authed
+          ? "Parcourez les offres et cliquez sur le cœur pour les ajouter à vos favoris."
+          : "Connectez-vous pour synchroniser vos favoris sur votre compte."}
       </p>
+      <Link href="/offers" className="btn btn-secondary mt-4 inline-flex">
+        Parcourir les offres
+        <ArrowRightIcon className="h-4 w-4" />
+      </Link>
     </div>
   );
 }
