@@ -6,6 +6,7 @@ export interface AuthUser {
   role: Role;
   firstName?: string;
   lastName?: string;
+  phone?: string;
 }
 
 export interface JwtPayload {
@@ -14,6 +15,7 @@ export interface JwtPayload {
   email?: string;
   firstName?: string;
   lastName?: string;
+  phone?: string;
   iat?: number;
   exp?: number;
 }

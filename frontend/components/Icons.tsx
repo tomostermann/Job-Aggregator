@@ -158,6 +158,13 @@ export const HeartFillIcon = (p: Props) => (
   </svg>
 );
 
+export const PencilIcon = (p: Props) => (
+  <svg {...base} {...p}>
+    <path d="M4 20h4l10-10-4-4L4 16v4Z" />
+    <path d="m14 6 4 4" />
+  </svg>
+);
+
 export const SettingsIcon = (p: Props) => (
   <svg {...base} {...p}>
     <circle cx="12" cy="12" r="3" />

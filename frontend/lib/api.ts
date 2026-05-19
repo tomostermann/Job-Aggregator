@@ -79,6 +79,16 @@ export const api = {
 
   me: (token: string) => request<AdminUser>("/api/me", {}, token),
 
+  updateMe: (
+    token: string,
+    payload: { firstName?: string; lastName?: string; phone?: string },
+  ) =>
+    request<{ token: string }>(
+      "/api/me",
+      { method: "PATCH", body: JSON.stringify(payload) },
+      token,
+    ),
+
   listOffers: (query: OffersQuery = {}) =>
     request<OfferList>(`/api/offers${buildQuery(query as Record<string, string | number | undefined>)}`),
 
