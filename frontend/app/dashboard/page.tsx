@@ -54,7 +54,7 @@ function DashboardContent() {
             contract_type: r.contract_type,
             salary: r.salary,
             published_at: null,
-            ai_score: r.ai_score,
+            // pas d'ai_score ici : les recommandations du dashboard sont génériques
           })),
         );
       })
