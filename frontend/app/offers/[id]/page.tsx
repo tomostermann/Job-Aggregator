@@ -28,6 +28,8 @@ import {
 import { useSavedOffers } from "@/lib/saved-store";
 import { useToast } from "@/lib/toast-context";
 import { useAuthGate } from "@/lib/auth-gate";
+import { useAuth } from "@/lib/auth-context";
+import { ApplyModal } from "@/components/ApplyModal";
 
 export default function OfferDetailPage() {
   return (
@@ -43,9 +45,11 @@ function DetailInner() {
   const { isSaved, toggle } = useSavedOffers();
   const { push } = useToast();
   const { requireLogin } = useAuthGate();
+  const { user, token } = useAuth();
   const [offer, setOffer] = useState<Offer | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [applyOpen, setApplyOpen] = useState(false);
 
   useEffect(() => {
     if (!params.id) return;
@@ -234,10 +238,14 @@ function DetailInner() {
               type="button"
               onClick={() => {
                 if (!requireLogin("postuler à une offre")) return;
-                push(
-                  "Candidature simulée — branchez le formulaire candidat ici",
-                  "success",
-                );
+                if (!offer.recruiter_email) {
+                  push(
+                    "Cette offre n'a pas de contact recruteur joignable.",
+                    "error",
+                  );
+                  return;
+                }
+                setApplyOpen(true);
               }}
               className="btn btn-primary w-full"
             >
@@ -286,6 +294,15 @@ function DetailInner() {
           </Link>
         </aside>
       </div>
+
+      {applyOpen && user && token && (
+        <ApplyModal
+          offer={offer}
+          user={user}
+          token={token}
+          onClose={() => setApplyOpen(false)}
+        />
+      )}
     </div>
   );
 }

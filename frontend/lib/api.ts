@@ -94,6 +94,13 @@ export const api = {
 
   getOffer: (id: string) => request<Offer>(`/api/offers/${id}`),
 
+  applyToOffer: (token: string, id: string, message: string) =>
+    request<{ ok: true; delivered: boolean }>(
+      `/api/offers/${id}/apply`,
+      { method: "POST", body: JSON.stringify({ message }) },
+      token,
+    ),
+
   createOffer: (
     token: string,
     payload: {
