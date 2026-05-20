@@ -4,9 +4,7 @@
 
 Implémentée (partielle)
 
-## Date
 
-20 mai 2026
 
 ---
 

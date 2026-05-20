@@ -4,9 +4,7 @@
 
 Accepté
 
-## Date
 
-19 mai 2026
 
 ## Contexte
 
