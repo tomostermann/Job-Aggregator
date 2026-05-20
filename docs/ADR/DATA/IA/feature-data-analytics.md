@@ -1,86 +1,84 @@
-# Feature : Données & Analytique — Job Aggregator
+# Feature: Data & Analytics — Job Aggregator
 
-## Statut
+## Status
 
-Implémentée (partielle)
-
-
+Implemented (partial)
 
 ---
 
-## Contexte et problème utilisateur
+## Context and User Problem
 
-Quand un utilisateur visite la plateforme Job Aggregator, il se retrouve face à **1800+ offres d'emploi**
-sans aucun indicateur de pertinence. Il ne sait pas lesquelles regarder en premier, ni si les résultats
-de sa recherche sont vraiment adaptés à ce qu'il cherche.
+When a user visits the Job Aggregator platform, they are faced with **1800+ job offers**
+with no relevance indicator. They have no way of knowing which ones to look at first, or whether
+the results of their search are truly suited to what they are looking for.
 
-**Question centrale** : comment aider l'utilisateur à évaluer la qualité d'une offre par rapport à sa
-recherche, sans lui demander de remplir un profil ?
-
----
-
-## Hypothèse de départ
-
-> Si on affiche un **score de pertinence** calculé par rapport à la requête de l'utilisateur,
-> il sera capable de trier et prioriser les offres plus rapidement.
-
-Ce score devait idéalement prendre en compte le profil utilisateur (compétences, niveau d'expérience,
-localisation préférée). Mais cette fonctionnalité a été abandonnée faute de temps — voir section
-[Abandonné en cours de route](#abandonné-en-cours-de-route).
+**Core question**: how do we help users evaluate the quality of an offer relative to their
+search, without asking them to fill out a profile?
 
 ---
 
-## Fonctionnalités implémentées
+## Initial Hypothesis
 
-### 1. Score de pertinence IA (mode "Pertinence IA")
+> If we display a **relevance score** calculated against the user's query,
+> they will be able to sort and prioritize offers more quickly.
 
-**Où** : page `/offers` → filtre "Pertinence IA"
+Ideally this score would take the user's profile into account (skills, experience level,
+preferred location). However, this feature was abandoned due to time constraints — see section
+[Abandoned Along the Way](#abandoned-along-the-way).
 
-**Comment ça fonctionne** :
+---
 
-Quand l'utilisateur choisit le tri par "Pertinence IA" et saisit une requête :
-1. Le frontend appelle `/api/recommendations?q=<requête>&limit=50`
-2. Le backend proxie vers le microservice FastAPI `POST http://ia:8000/score`
-3. Le microservice encode la requête et chaque offre en vecteur numérique (embeddings)
-4. Il calcule la **similarité cosinus** entre la requête et chaque offre
-5. Il applique `sqrt(similarité) × 100` pour obtenir un score lisible entre 0 et 100
-6. Il applique un **boost de localisation** (+30%) si un mot de la requête correspond à la ville de l'offre
-7. Le frontend affiche les offres triées par score décroissant, avec le score visible sur chaque carte
+## Implemented Features
 
-**Exemple concret** — Requête : `"stage python paris"` :
+### 1. AI Relevance Score ("AI Relevance" mode)
 
-| Offre | Ville | Score brut | Score final | Affiché |
+**Where**: `/offers` page → "AI Relevance" sort option
+
+**How it works**:
+
+When the user selects "AI Relevance" sorting and types a query:
+1. The frontend calls `/api/recommendations?q=<query>&limit=50`
+2. The backend proxies to the FastAPI microservice `POST http://ia:8000/score`
+3. The microservice encodes the query and each offer into a numeric vector (embeddings)
+4. It computes the **cosine similarity** between the query and each offer
+5. It applies `sqrt(similarity) × 100` to get a readable score between 0 and 100
+6. It applies a **location boost** (+30%) if a word from the query matches the offer's city
+7. The frontend displays offers sorted by descending score, with the score visible on each card
+
+**Concrete example** — Query: `"python internship paris"`:
+
+| Offer | City | Raw Score | Final Score | Displayed |
 |---|---|---|---|---|
 | Software Engineer Python / FastAPI | Paris | 61 | 79 (boost ×1.3) | **79/100** ✅ |
-| Développeur Python expérimenté | Lille | 69 | 69 | **69/100** |
-| Stage full stack developer | Marseille | 60 | 60 | **60/100** |
+| Experienced Python Developer | Lille | 69 | 69 | **69/100** |
+| Full stack developer internship | Marseille | 60 | 60 | **60/100** |
 
-Sans le boost de localisation, l'offre à Lille (score sémantique plus élevé) apparaissait en premier —
-ce qui était contre-intuitif pour une requête contenant "paris".
+Without the location boost, the Lille offer (higher semantic score) would appear first —
+which was counter-intuitive for a query containing "paris".
 
-**Fichiers concernés** :
-- `ia/main.py` — microservice FastAPI (endpoint `/score`)
-- `backend/src/routes/recommendations.ts` — route proxy
-- `frontend/app/offers/page.tsx` — basculement vers IA si `sort === "ia"` ET requête non vide
-- `frontend/lib/score.ts` — retourne `offer.ai_score` directement si disponible
-- `frontend/components/OfferCard.tsx` — affiche le score uniquement si `offer.ai_score !== undefined`
+**Files involved**:
+- `ia/main.py` — FastAPI microservice (endpoint `/score`)
+- `backend/src/routes/recommendations.ts` — proxy route
+- `frontend/app/offers/page.tsx` — switches to AI if `sort === "ia"` AND query is non-empty
+- `frontend/lib/score.ts` — returns `offer.ai_score` directly if available
+- `frontend/components/OfferCard.tsx` — displays score only if `offer.ai_score !== undefined`
 
 ---
 
-### 2. Recommandations personnalisées sur le dashboard
+### 2. Personalized Recommendations on the Dashboard
 
-**Où** : page `/dashboard` → section "Offres recommandées"
+**Where**: `/dashboard` page → "Recommended Offers" section
 
-**Comment ça fonctionne** :
+**How it works**:
 
-À l'ouverture du dashboard, 4 offres sont recommandées via le microservice IA avec une requête
-générique : `"développeur web fullstack stage CDI"`. Ces offres sont affichées sans score visible,
-car le score d'une requête générique ne représente pas une pertinence réelle pour l'utilisateur
-spécifique.
+When the dashboard loads, 4 offers are recommended via the AI microservice using a
+generic query: `"web fullstack developer internship CDI"`. These offers are displayed without
+a visible score, because the score from a generic query does not represent real relevance
+for the specific user.
 
 ```typescript
 // dashboard/page.tsx
-const DEFAULT_QUERY = "développeur web fullstack stage CDI";
+const DEFAULT_QUERY = "web fullstack developer internship CDI";
 
 Promise.all([api.listOffers({ size: 1 }), api.recommendations(DEFAULT_QUERY, 4)])
   .then(([list, iaResults]) => {
@@ -88,77 +86,77 @@ Promise.all([api.listOffers({ size: 1 }), api.recommendations(DEFAULT_QUERY, 4)]
       id: r.id, title: r.title, company: r.company,
       location: r.location, contract_type: r.contract_type,
       salary: r.salary, published_at: null
-      // Pas de ai_score transmis volontairement — requête générique = score non significatif
+      // ai_score intentionally not passed — generic query = meaningless score
     })));
   });
 ```
 
-**Avant** (abandonné) : les recommandations du dashboard utilisaient `computeOfferScore()`, une
-fonction JS calculant un score heuristique basé sur des mots-clés fixes. Ce score était **identique
-quelle que soit la requête** — il évaluait la "qualité" globale de l'offre (ancienneté, salaire
-renseigné, longueur de la description) et non sa pertinence par rapport à ce que cherchait l'utilisateur.
+**Before** (abandoned): dashboard recommendations used `computeOfferScore()`, a
+JS function calculating a heuristic score based on fixed keywords. This score was **identical
+regardless of the query** — it evaluated the overall "quality" of the offer (recency, salary
+provided, description length) rather than its relevance to what the user was looking for.
 
 ```typescript
-// Ancienne approche — abandonnée
+// Old approach — abandoned
 function computeOfferScore(offer: Offer): number {
   const keywords = ["react", "python", "docker", "typescript"];
   const matches = keywords.filter(k => text.includes(k)).length;
   const keywordScore = Math.min(40, matches * 6);
   const salaryScore = offer.salary ? 10 : 0;
-  const ageScore = ...; // bonus si récent
+  const ageScore = ...; // bonus if recent
   return keywordScore + salaryScore + ageScore;
 }
 ```
 
-**Problème** : une offre React obtenait toujours le même score, que l'utilisateur cherche "Python"
-ou "React". Ce n'était pas un indicateur de pertinence, mais un indicateur de "richesse" de l'offre.
+**Problem**: a React offer always got the same score whether the user searched for "Python"
+or "React". It was not a relevance indicator — it was a measure of offer "richness".
 
 ---
 
-## Métriques de succès
+## Success Metrics
 
-| Métrique | Objectif | État actuel |
+| Metric | Target | Current State |
 |---|---|---|
-| Temps de réponse `/score` (1800+ offres) | < 500ms | ~300-400ms ✅ |
-| Cohérence topN pour requête connue | Paris avant Lille sur "stage python paris" | Validé manuellement ✅ |
-| Score affiché uniquement si pertinent | Score absent en navigation générale | Corrigé ✅ |
-| Tests backend passants | 100% | 17/17 ✅ |
+| Response time `/score` (1800+ offers) | < 500ms | ~300-400ms ✅ |
+| Top result consistency for known query | Paris before Lille on "python internship paris" | Validated manually ✅ |
+| Score only shown when meaningful | No score on general browsing | Fixed ✅ |
+| Backend tests passing | 100% | 17/17 ✅ |
 
 ---
 
-## Abandonné en cours de route
+## Abandoned Along the Way
 
-### Score personnalisé par utilisateur
+### User-personalized Score
 
-**Idée initiale** : utiliser le profil de l'utilisateur (compétences renseignées, ville, niveau)
-pour pondérer les recommandations. Par exemple, un utilisateur à Paris en 3ème année d'Epitech
-cherchant un stage Python verrait automatiquement les offres correspondantes sans taper de recherche.
+**Initial idea**: use the user's profile (listed skills, city, level)
+to weight recommendations. For example, a Paris-based 3rd-year Epitech student
+looking for a Python internship would automatically see matching offers without typing a search.
 
-**Pourquoi abandonné** :
-- Nécessite un système de profil utilisateur complet (formulaire, stockage, mise à jour)
-- Le délai projet ne permettait pas de développer cette fonctionnalité correctement
-- Risque de surcharger l'UX avec un formulaire de profil obligatoire
+**Why it was abandoned**:
+- Requires a complete user profile system (form, storage, updates)
+- Project timeline did not allow this feature to be developed properly
+- Risk of overloading the UX with a mandatory profile form
 
-**Ce qui a été fait à la place** : requête générique `"développeur web fullstack stage CDI"` sur le
-dashboard, qui retourne des offres raisonnablement pertinentes sans profil utilisateur.
+**What was done instead**: generic query `"web fullstack developer internship CDI"` on the
+dashboard, which returns reasonably relevant offers without a user profile.
 
 ---
 
-### Score affiché sur toutes les cartes (même sans recherche)
+### Score Displayed on All Cards (Even Without a Search)
 
-**Problème observé** : après l'intégration du microservice IA, le score s'affichait sur toutes
-les cartes d'offres — y compris en navigation générale (sans requête), et sur le dashboard avec
-la requête générique. Cela donnait des scores comme "71/100", "69/100", "67/100" sur le dashboard,
-qui semblaient significatifs mais ne l'étaient pas (calculés sur une requête générique).
+**Problem observed**: after integrating the AI microservice, the score was displayed on all
+offer cards — including during general browsing (no query), and on the dashboard with
+the generic query. This produced scores like "71/100", "69/100", "67/100" on the dashboard,
+which appeared significant but were not (calculated against a generic query).
 
-**Correction** : le score n'est maintenant affiché que si `offer.ai_score !== undefined`.
-Les recommandations du dashboard transmettent les offres **sans le champ `ai_score`** intentionnellement.
+**Fix**: the score is now only displayed if `offer.ai_score !== undefined`.
+Dashboard recommendations intentionally send offers **without the `ai_score` field**.
 
 ```typescript
-// OfferCard.tsx — affichage conditionnel
+// OfferCard.tsx — conditional display
 {offer.ai_score !== undefined ? (
   <div className="text-right">
-    <div className="text-[10px] font-mono uppercase text-slate-muted">Score IA</div>
+    <div className="text-[10px] font-mono uppercase text-slate-muted">AI Score</div>
     <div className={`font-display text-xl font-bold ${scoreColor(offer.ai_score)}`}>
       {offer.ai_score}<span className="text-xs"> /100</span>
     </div>
@@ -168,54 +166,54 @@ Les recommandations du dashboard transmettent les offres **sans le champ `ai_sco
 
 ---
 
-## Limitations connues
+## Known Limitations
 
-- **Pas de personnalisation par utilisateur** : le dashboard utilise une requête générique fixe.
-  Si l'utilisateur est un expert en sécurité réseau, il verra quand même des offres "fullstack web".
-- **Embeddings statiques** : les vecteurs sont précalculés à l'ingestion (`POST /compute-embeddings`).
-  Si une offre est mise à jour, il faut relancer le calcul manuellement.
-- **Scores plafonnés en pratique** : même avec la transformation `sqrt()`, les scores dépassent
-  rarement 80/100. C'est une caractéristique du modèle `all-MiniLM-L6-v2`, pas un bug.
-- **Boost de localisation simpliste** : le boost est binaire (présent ou absent). Une ville à
-  50km n'est pas distinguée d'une ville à 500km — seule la correspondance exacte de mot compte.
+- **No user personalization**: the dashboard uses a fixed generic query.
+  If the user is a network security expert, they will still see "fullstack web" offers.
+- **Static embeddings**: vectors are pre-computed at ingestion (`POST /compute-embeddings`).
+  If an offer is updated, the computation must be re-run manually.
+- **Scores capped in practice**: even with the `sqrt()` transformation, scores rarely exceed
+  80/100. This is a characteristic of the `all-MiniLM-L6-v2` model, not a bug.
+- **Simplistic location boost**: the boost is binary (present or absent). A city 50km away
+  is not distinguished from one 500km away — only exact word matching counts.
 
 ---
 
-## Architecture technique
+## Technical Architecture
 
 ```
-Navigateur
+Browser
     │
-    │ GET /api/recommendations?q=stage+python+paris&limit=50
+    │ GET /api/recommendations?q=python+internship+paris&limit=50
     ▼
-Backend Express (Node.js)
+Express Backend (Node.js)
     │
     │ POST http://ia:8000/score
-    │ { "query": "stage python paris", "limit": 50 }
+    │ { "query": "python internship paris", "limit": 50 }
     ▼
-Microservice FastAPI (Python)
+FastAPI Microservice (Python)
     │
-    ├── encode(query) → vecteur 384 dimensions
-    ├── pour chaque offre en base :
+    ├── encode(query) → 384-dimension vector
+    ├── for each offer in the database:
     │     cosine_similarity(query_vector, offer_vector)
     │     → sqrt(sim) × 100
-    │     → ×1.3 si mot de la requête dans ville de l'offre
-    └── retourne les N meilleures offres triées par score
+    │     → ×1.3 if query word matches offer city
+    └── returns the top N offers sorted by score
     │
     ▼
 Backend → Frontend
     { id, title, company, location, contract_type, salary, ai_score }
 ```
 
-## Preuve dans le code
+## Evidence in the Code
 
-- `ia/main.py` — microservice FastAPI : health, compute-embeddings, score
-- `ia/Dockerfile` — modèle pré-téléchargé au build
-- `backend/src/routes/recommendations.ts` — route proxy `/api/recommendations`
-- `backend/src/index.ts` — enregistrement de la route
-- `frontend/app/offers/page.tsx` — bascule sur IA si `sort === "ia"` et requête non vide
-- `frontend/app/dashboard/page.tsx` — recommandations IA sans score affiché
-- `frontend/components/OfferCard.tsx` — affichage conditionnel du score
-- `frontend/lib/score.ts` — retour direct du score IA si disponible
-- `frontend/lib/types.ts` — champ `ai_score?: number` sur l'interface `Offer`
-- `docker-compose.yml` — service `ia` sur le port 8000, réseau `app-network`
+- `ia/main.py` — FastAPI microservice: health, compute-embeddings, score
+- `ia/Dockerfile` — model pre-downloaded at build time
+- `backend/src/routes/recommendations.ts` — proxy route `/api/recommendations`
+- `backend/src/index.ts` — route registration
+- `frontend/app/offers/page.tsx` — switches to AI if `sort === "ia"` and query is non-empty
+- `frontend/app/dashboard/page.tsx` — AI recommendations without displayed score
+- `frontend/components/OfferCard.tsx` — conditional score display
+- `frontend/lib/score.ts` — direct return of AI score if available
+- `frontend/lib/types.ts` — `ai_score?: number` field on the `Offer` interface
+- `docker-compose.yml` — `ia` service on port 8000, `app-network`

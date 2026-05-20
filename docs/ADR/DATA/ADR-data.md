@@ -1,179 +1,178 @@
-# ADR-Data : Stratégie d'intégration des données WeLoveDevs
+# ADR-Data: WeLoveDevs Data Integration Strategy
 
-## Statut
+## Status
 
-Accepté
+Accepted
 
 ---
 
-## Contexte
+## Context
 
-Le projet Job Aggregator a besoin d'une source d'offres d'emploi tech fiable et volumineuse.
-L'objectif est d'afficher des offres réelles aux utilisateurs, sans les créer manuellement.
+The Job Aggregator project needs a reliable and high-volume source of tech job offers.
+The goal is to display real offers to users, without creating them manually.
 
-### Contraintes identifiées
+### Identified Constraints
 
-| Contrainte | Raison |
+| Constraint | Reason |
 |---|---|
-| Source de données réelle | Les offres doivent exister, pas de données fictives |
-| Rate limit à respecter | Éviter le bannissement de l'API source |
-| Stockage structuré | Requêtes rapides, filtres, contraintes d'intégrité |
-| Pipeline automatisable | Pas d'import manuel à chaque mise à jour |
-| Stack Python/Node.js | Cohérence avec les microservices existants |
+| Real data source | Offers must exist, no fake data |
+| Rate limit compliance | Avoid getting the API key banned |
+| Structured storage | Fast queries, filters, integrity constraints |
+| Automatable pipeline | No manual import on each update |
+| Python/Node.js stack | Consistency with existing microservices |
 
 ---
 
-## Décision
+## Decision
 
-Nous utilisons l'**API WeLoveDevs** comme source unique d'offres d'emploi, avec un pipeline
-d'ingestion Node.js (Express) qui collecte, normalise et stocke les données dans PostgreSQL.
+We use the **WeLoveDevs API** as the sole job offer source, with a Node.js (Express) ingestion
+pipeline that fetches, normalizes, and stores data in PostgreSQL.
 
-### Stratégie d'intégration WeLoveDevs
+### WeLoveDevs Integration Strategy
 
-WeLoveDevs expose une API REST publique listant des offres d'emploi tech françaises.
-Nous l'interrogeons via `GET /jobs` avec pagination pour récupérer l'ensemble du catalogue.
+WeLoveDevs exposes a public REST API listing French tech job offers.
+We query it via `GET /jobs` with pagination to retrieve the full catalog.
 
-**Paramètres utilisés** :
-- `page` — pagination des résultats
-- `limit` — nombre d'offres par page (max autorisé)
-- Headers d'authentification avec la clé API (`WELOVEDEVS_API_KEY` dans `.env`)
+**Parameters used**:
+- `page` — result pagination
+- `limit` — number of offers per page (maximum allowed)
+- Authentication headers with the API key (`WELOVEDEVS_API_KEY` in `.env`)
 
-**Volume** : ~1800+ offres disponibles au moment de l'intégration.
+**Volume**: ~1800+ offers available at the time of integration.
 
-### Flow d'ingestion complet
+### Full Ingestion Flow
 
 ```
-API WeLoveDevs
+WeLoveDevs API
       │
       │  GET /jobs?page=N&limit=50
       ▼
   Fetcher (Node.js)
-      │  Parcourt toutes les pages jusqu'à épuisement
+      │  Iterates through all pages until exhausted
       │
       ▼
   Normalizer
-      │  Transforme chaque offre brute en format interne standardisé
-      │  (titre, entreprise, localisation, type de contrat, salaire, description)
+      │  Transforms each raw offer into a standardized internal format
+      │  (title, company, location, contract type, salary, description)
       │
       ▼
   PostgreSQL
       │  INSERT INTO offers ... ON CONFLICT DO NOTHING
-      │  (évite les doublons si l'ingestion est relancée)
+      │  (prevents duplicates if ingestion is re-run)
       ▼
-  Base de données prête pour les requêtes utilisateurs
+  Database ready for user queries
 ```
 
-### Gestion de la rate limit
+### Rate Limit Management
 
-L'API WeLoveDevs impose une limite de **1 requête par seconde par étudiant**.
+The WeLoveDevs API enforces a limit of **1 request per second per student**.
 
-Pour respecter cette contrainte, le pipeline insère un délai de 1 seconde entre chaque appel
-paginé :
+To comply with this constraint, the pipeline inserts a 1-second delay between each
+paginated call:
 
 ```typescript
-// Délai entre chaque page pour respecter le rate limit
+// Delay between each page to respect the rate limit
 await new Promise((resolve) => setTimeout(resolve, 1000));
 ```
 
-Sans ce délai, l'API retourne des erreurs `429 Too Many Requests` après quelques pages,
-ce qui interrompt l'ingestion et peut entraîner un bannissement temporaire de la clé API.
+Without this delay, the API returns `429 Too Many Requests` errors after a few pages,
+which interrupts ingestion and can result in a temporary ban of the API key.
 
-**Impact sur le temps d'ingestion** : avec ~1800 offres et 50 offres par page, cela représente
-~36 appels, soit ~36 secondes pour une ingestion complète. Ce délai est acceptable car
-l'ingestion est lancée manuellement une seule fois via `POST /api/admin/ingest`.
+**Impact on ingestion time**: with ~1800 offers and 50 offers per page, this means
+~36 calls, i.e. ~36 seconds for a complete ingestion. This delay is acceptable because
+ingestion is triggered manually just once via `POST /api/admin/ingest`.
 
-### Normalisation des données
+### Data Normalization
 
-Les offres brutes de l'API WeLoveDevs ont un format qui ne correspond pas directement
-à notre schéma interne. Le normalizer transforme chaque offre en appliquant ces règles :
+Raw offers from the WeLoveDevs API do not directly match our internal schema.
+The normalizer transforms each offer by applying these rules:
 
-| Champ WeLoveDevs | Champ interne | Transformation |
+| WeLoveDevs Field | Internal Field | Transformation |
 |---|---|---|
-| `title` | `title` | Nettoyage des espaces |
-| `company.name` | `company` | Extraction du nom uniquement |
-| `profile.city` | `location` | Ville extraite du profil |
-| `contract.type` | `contract_type` | Standardisation (CDI, CDD, Stage...) |
-| `salary.min/max` | `salary` | Formatage en chaîne lisible ou null |
-| `description` | `description` | Texte brut, HTML strippé si nécessaire |
-| — | `source` | Valeur fixe `"welovedevs"` |
-| — | `external_id` | ID unique de l'offre chez WeLoveDevs |
+| `title` | `title` | Whitespace trimming |
+| `company.name` | `company` | Name extracted only |
+| `profile.city` | `location` | City extracted from profile |
+| `contract.type` | `contract_type` | Standardization (CDI, CDD, Internship...) |
+| `salary.min/max` | `salary` | Formatted as readable string or null |
+| `description` | `description` | Plain text, HTML stripped if needed |
+| — | `source` | Fixed value `"welovedevs"` |
+| — | `external_id` | Unique offer ID from WeLoveDevs |
 
-La colonne `external_id` + contrainte `UNIQUE` en base empêche les doublons lors des
-réingestions successives (comportement `ON CONFLICT DO NOTHING`).
+The `external_id` column + `UNIQUE` constraint in the database prevents duplicates
+across successive re-ingestions (`ON CONFLICT DO NOTHING` behavior).
 
-### Déclenchement de l'ingestion
+### Triggering Ingestion
 
-L'ingestion est déclenchée manuellement via un endpoint admin protégé :
+Ingestion is triggered manually via a protected admin endpoint:
 
 ```
 POST /api/admin/ingest
 Authorization: Bearer <JWT admin>
 ```
 
-Seul un utilisateur avec le rôle `admin` peut déclencher l'ingestion.
-L'endpoint retourne le nombre d'offres insérées et le temps écoulé.
+Only a user with the `admin` role can trigger ingestion.
+The endpoint returns the number of offers inserted and the elapsed time.
 
 ---
 
-## Source additionnelle
+## Additional Source
 
-Aucune source additionnelle n'a été intégrée. WeLoveDevs couvre suffisamment le marché
-tech français pour les besoins du projet (~1800 offres). L'ajout d'une seconde source
-(ex : Welcome to the Jungle) aurait nécessité un second normalizer et une gestion des
-conflits entre sources — complexité non justifiée dans le cadre du projet.
-
----
-
-## Alternative rejetée — Scraping web
-
-**Description** : au lieu d'utiliser une API officielle, récupérer les offres en parsant
-directement les pages HTML de sites comme Indeed, LinkedIn Jobs ou WTTJ.
-
-**Ce qu'on a évalué** :
-- Pas de clé API requise
-- Accès à plus de sources simultanément
-- Volume potentiel beaucoup plus grand
-
-**Pourquoi on a rejeté** :
-
-- **Légalité incertaine** : le scraping viole les CGU de la plupart des plateformes.
-  Dans le cadre d'un projet Epitech évalué, utiliser des données obtenues illégalement
-  est un risque inacceptable.
-
-- **Fragilité** : un changement de DOM casse le scraper. L'API WeLoveDevs est stable
-  et versionnée.
-
-- **Maintenance** : un scraper multi-sources demande un parser par site, chacun à
-  maintenir séparément. L'API WeLoveDevs fournit un format uniforme.
-
-- **Rate limiting non contrôlable** : un scraper agressif peut entraîner un ban d'IP
-  permanent, sans recours. Avec l'API officielle, le rate limit est documenté et
-  respecté programmatiquement.
-
-**Conclusion** : l'API WeLoveDevs offre un cadre légal, stable, et suffisant pour
-le volume cible du projet.
+No additional source was integrated. WeLoveDevs provides sufficient coverage of the French
+tech market for the project's needs (~1800 offers). Adding a second source
+(e.g. Welcome to the Jungle) would have required a second normalizer and conflict management
+between sources — complexity not justified for this project.
 
 ---
 
-## Limitations connues
+## Rejected Alternative — Web Scraping
 
-- **Données statiques** : l'ingestion est manuelle. Les nouvelles offres publiées sur
-  WeLoveDevs ne sont pas récupérées automatiquement — il faut relancer `POST /api/admin/ingest`.
-- **Pas de suppression des offres expirées** : si une offre est retirée de WeLoveDevs,
-  elle reste en base. Un mécanisme de synchronisation (diff entre API et base) n'a pas
-  été implémenté.
-- **Source unique** : si l'API WeLoveDevs est indisponible, aucune nouvelle offre ne
-  peut être ingérée.
-- **Salaires souvent null** : beaucoup d'entreprises ne renseignent pas les salaires
-  sur WeLoveDevs, ce qui impacte la qualité des données affichées.
+**Description**: instead of using an official API, fetch offers by parsing the HTML pages
+of sites like Indeed, LinkedIn Jobs, or WTTJ directly.
+
+**What we evaluated**:
+- No API key required
+- Access to more sources simultaneously
+- Much larger potential volume
+
+**Why we rejected it**:
+
+- **Legal uncertainty**: scraping violates the terms of service of most platforms.
+  In the context of an evaluated Epitech project, using illegally obtained data
+  is an unacceptable risk.
+
+- **Fragility**: a DOM change breaks the scraper. The WeLoveDevs API is stable
+  and versioned.
+
+- **Maintenance**: a multi-source scraper requires one parser per site, each one
+  to maintain separately. The WeLoveDevs API provides a uniform format.
+
+- **Uncontrollable rate limiting**: an aggressive scraper can result in a permanent IP ban,
+  with no recourse. With the official API, the rate limit is documented and
+  handled programmatically.
+
+**Conclusion**: the WeLoveDevs API provides a legal, stable, and sufficient framework
+for the project's target volume.
 
 ---
 
-## Preuve dans le code
+## Known Limitations
 
-- `backend/src/routes/admin.ts` — endpoint `POST /api/admin/ingest`
-- `backend/src/services/ingestion.ts` — pipeline fetch → normalize → insert
-- `backend/src/services/normalizer.ts` — transformation des offres brutes
-- `backend/src/config/schema.sql` — table `offers` avec contrainte `UNIQUE(external_id)`
-- `backend/tests/normalizer.test.ts` — tests unitaires du normalizer
-- `docker-compose.yml` — variables `WELOVEDEVS_API_KEY` passées au backend
+- **Static data**: ingestion is manual. New offers published on WeLoveDevs are not
+  automatically fetched — `POST /api/admin/ingest` must be re-run.
+- **No removal of expired offers**: if an offer is taken down from WeLoveDevs,
+  it remains in the database. A synchronization mechanism (diff between API and database)
+  was not implemented.
+- **Single source**: if the WeLoveDevs API is unavailable, no new offers can be ingested.
+- **Salaries often null**: many companies do not provide salary information on WeLoveDevs,
+  which impacts the quality of displayed data.
+
+---
+
+## Evidence in the Code
+
+- `backend/src/routes/admin.ts` — `POST /api/admin/ingest` endpoint
+- `backend/src/services/ingestion.ts` — fetch → normalize → insert pipeline
+- `backend/src/services/normalizer.ts` — raw offer transformation
+- `backend/src/config/schema.sql` — `offers` table with `UNIQUE(external_id)` constraint
+- `backend/tests/normalizer.test.ts` — normalizer unit tests
+- `docker-compose.yml` — `WELOVEDEVS_API_KEY` variables passed to the backend
