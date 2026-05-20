@@ -23,6 +23,13 @@ interface ProfileUpdate {
   firstName?: string;
   lastName?: string;
   phone?: string;
+  signature?: string;
+}
+
+interface CvUpload {
+  filename: string;
+  mimetype: string;
+  data: string;
 }
 
 interface AuthContextValue {
@@ -33,6 +40,8 @@ interface AuthContextValue {
   register: (input: RegisterInput) => Promise<AuthUser>;
   logout: () => void;
   updateProfile: (input: ProfileUpdate) => Promise<AuthUser>;
+  uploadCv: (cv: CvUpload) => Promise<AuthUser>;
+  deleteCv: () => Promise<AuthUser>;
 }
 
 const STORAGE_KEY = "jobaggregator.token";
@@ -48,6 +57,9 @@ function userFromToken(token: string): AuthUser | null {
     firstName: decoded.firstName,
     lastName: decoded.lastName,
     phone: decoded.phone,
+    signature: decoded.signature,
+    hasCv: decoded.hasCv,
+    cvFilename: decoded.cvFilename,
   };
 }
 
@@ -123,6 +135,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     [token, persist],
   );
 
+  const uploadCv = useCallback<AuthContextValue["uploadCv"]>(
+    async (cv) => {
+      if (!token) throw new Error("Non authentifié");
+      const { token: t } = await api.uploadCv(token, cv);
+      persist(t);
+      const u = userFromToken(t);
+      if (!u) throw new Error("Token invalide retourné par le serveur");
+      return u;
+    },
+    [token, persist],
+  );
+
+  const deleteCv = useCallback<AuthContextValue["deleteCv"]>(async () => {
+    if (!token) throw new Error("Non authentifié");
+    const { token: t } = await api.deleteCv(token);
+    persist(t);
+    const u = userFromToken(t);
+    if (!u) throw new Error("Token invalide retourné par le serveur");
+    return u;
+  }, [token, persist]);
+
   const value = useMemo<AuthContextValue>(
     () => ({
       user,
@@ -132,8 +165,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       register,
       logout,
       updateProfile,
+      uploadCv,
+      deleteCv,
     }),
-    [user, token, isLoading, login, register, logout, updateProfile],
+    [
+      user,
+      token,
+      isLoading,
+      login,
+      register,
+      logout,
+      updateProfile,
+      uploadCv,
+      deleteCv,
+    ],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

@@ -7,6 +7,9 @@ export interface AuthUser {
   firstName?: string;
   lastName?: string;
   phone?: string;
+  signature?: string;
+  hasCv?: boolean;
+  cvFilename?: string;
 }
 
 export interface JwtPayload {
@@ -16,6 +19,9 @@ export interface JwtPayload {
   firstName?: string;
   lastName?: string;
   phone?: string;
+  signature?: string;
+  hasCv?: boolean;
+  cvFilename?: string;
   iat?: number;
   exp?: number;
 }
