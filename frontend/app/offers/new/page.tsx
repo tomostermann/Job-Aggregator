@@ -15,6 +15,7 @@ import {
 import { api } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
 import { useToast } from "@/lib/toast-context";
+import { formatSalary } from "@/lib/format";
 
 const CONTRACT_TYPES = ["CDI", "CDD", "Stage", "Alternance", "Freelance"];
 
@@ -371,7 +372,7 @@ function Inner() {
                 {salary && (
                   <span className="pill pill-flame">
                     <EuroIcon className="h-3 w-3" />
-                    {salary}
+                    {formatSalary(salary)}
                   </span>
                 )}
               </div>

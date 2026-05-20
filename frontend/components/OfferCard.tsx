@@ -4,7 +4,7 @@ import Link from "next/link";
 import type { Offer } from "@/lib/types";
 import { CompanyAvatar } from "./CompanyAvatar";
 import { computeOfferScore, isGhostJob, extractTags } from "@/lib/score";
-import { formatRelativeDate } from "@/lib/format";
+import { formatRelativeDate, formatSalary } from "@/lib/format";
 import {
   ArrowRightIcon,
   AlertIcon,
@@ -88,7 +88,7 @@ export function OfferCard({
               {offer.salary && (
                 <div className="mt-3 inline-flex items-center gap-1.5 text-sm font-semibold text-mint-600">
                   <EuroIcon className="h-4 w-4" />
-                  {offer.salary}
+                  {formatSalary(offer.salary)}
                 </div>
               )}
             </div>

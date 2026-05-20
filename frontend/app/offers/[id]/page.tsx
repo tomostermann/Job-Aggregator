@@ -18,7 +18,7 @@ import {
 } from "@/components/Icons";
 import { api } from "@/lib/api";
 import type { Offer } from "@/lib/types";
-import { formatDate, formatRelativeDate } from "@/lib/format";
+import { formatDate, formatRelativeDate, formatSalary } from "@/lib/format";
 import {
   computeOfferScore,
   extractTags,
@@ -123,7 +123,7 @@ function DetailInner() {
                   {offer.salary && (
                     <span className="pill pill-flame">
                       <EuroIcon className="h-3 w-3" />
-                      {offer.salary}
+                      {formatSalary(offer.salary)}
                     </span>
                   )}
                   {ghost && (
@@ -223,7 +223,7 @@ function DetailInner() {
             />
             <DetailItem
               label="Rémunération"
-              value={offer.salary ?? "Non communiqué"}
+              value={offer.salary ? formatSalary(offer.salary) : "Non communiqué"}
               icon={<EuroIcon className="h-4 w-4" />}
             />
             <DetailItem
