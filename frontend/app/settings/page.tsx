@@ -317,6 +317,7 @@ function Inner() {
             )}
           </form>
 
+          {user.role !== "admin" && (
           <section className="card p-6 space-y-4">
             <div className="flex items-center justify-between gap-3">
               <div className="flex items-center gap-2">
@@ -382,7 +383,9 @@ function Inner() {
               </div>
             )}
           </section>
+          )}
 
+          {user.role !== "admin" && (
           <section className="card p-6 space-y-4">
             <div className="flex items-center gap-2">
               <SettingsIcon className="h-5 w-5 text-ink-700" />
@@ -446,6 +449,7 @@ function Inner() {
               onChange={onCvChange}
             />
           </section>
+          )}
         </>
       )}
     </div>
