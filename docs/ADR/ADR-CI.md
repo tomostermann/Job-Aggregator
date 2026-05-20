@@ -1,54 +1,54 @@
-# ADR — CI and Engineering Workflow
+# ADR-CI & Engineering Workflow
 
-**Date:** 2026-05-18  
+**Date:** May 18, 2026  
 
 ---
 
 ## Context
 
-The project requires a CI pipeline that protects code quality on every pull request and push to `main`. GitHub Actions is used with three automated steps: build check, lint, and tests covering two API routes and one normalization function.
+To prevent the `main` branch from breaking and to ensure unformatted code doesn't slip through the cracks, a robust CI pipeline is required. The goal is to automatically validate every Pull Request and direct push to `main`. 
+
+We rely on GitHub Actions with three key steps: validating TypeScript compilation, running the linter, and executing the test suite (which currently covers our API routes and normalization logic).
 
 ---
 
 ## Decision
 
-Single workflow `.github/workflows/ci.yml` triggered on `push` and `pull_request` to `main`. All steps run inside `./backend`.
+Everything is centralized within a single workflow file: `.github/workflows/ci.yml`. It triggers on any activity (`push` or `pull_request`) targeting `main`. Since the backend logic is isolated, all commands run inside the `./backend` directory.
 
 ---
 
-## What Is Automated
+## Automated Steps
 
 ### 1. Build Check
+We run `npm run build:check` (which triggers `tsc --noEmit`). This allows us to catch TypeScript typing errors without generating unnecessary build files on the runner.
 
-`npm run build:check` runs `tsc --noEmit` to catch TypeScript compilation errors before merging. No files written to disk.
+### 2. Linting
+An `npm run lint` command (via ESLint) is executed across all `.ts` and `.js` files. The goal is to maintain clean, consistent formatting and catch obvious bugs before code review.
 
-### 2. Lint
+### 3. Test Suite
+We execute `npm test` using Jest to collect coverage data (`--coverage`). The suite is split into two major components[cite: 1]:
 
-`npm run lint` runs ESLint across `.ts` and `.js` files to enforce style consistency and catch obvious bugs early.
+* **Normalization Module** (`tests/normalizer.unit.test.js`): 18 test cases evaluating `normalizeOffer` and `stripHtml`[cite: 1]. It validates field mapping, salary formatting, HTML stripping, null value handling, and multi-value fields[cite: 1].
+* **API Routes** (`tests/routes.test.ts`): 7 test cases validating the behavior of 3 strategic endpoints[cite: 1].
 
-### 3. Tests
+Here is the testing matrix for the HTTP layer[cite: 1]:
 
-`npm test` runs Jest with `--coverage`. Two suites:
-
-**Normalization** (`tests/normalizer.unit.test.js`) — 18 cases covering `normalizeOffer` and `stripHtml`: field mapping, salary formatting, HTML stripping, null handling, and multi-value fields.
-
-**API Routes** (`tests/routes.test.ts`) — 7 cases across 3 endpoints:
-
-| Route | Case | Expected |
+| Route | Test Scenario | Expected Result |
 |---|---|---|
-| `GET /offers` | Standard | 200 + `{ data }` |
-| `GET /offers` | Service throws | 500 + `{ error }` |
-| `GET /offers/:id` | Found | 200 + `{ title }` |
-| `GET /offers/:id` | Not found | 404 + `{ error }` |
-| `POST /offers` | Valid body | 201 + offer |
+| `GET /offers` | Happy path | 200 + `{ data }` |
+| `GET /offers` | Service crashes / throws an exception | 500 + `{ error }` |
+| `GET /offers/:id` | Resource found | 200 + `{ title }` |
+| `GET /offers/:id` | Resource not found | 404 + `{ error }` |
+| `POST /offers` | Valid payload | 201 + created offer |
 | `POST /offers` | Title too short | 400 + `{ error }` |
-| `POST /offers` | Missing title | 400 + `{ error }` |
+| `POST /offers` | Missing title in payload | 400 + `{ error }` |
 
-The service layer is mocked via `jest.mock` — only HTTP controller behavior is tested.
+> **Note on Isolation:** We use `jest.mock` to completely short-circuit the service layer[cite: 1]. Here, we are strictly testing the HTTP routing and controllers, not the database[cite: 1].
 
 ---
 
-## Workflow File
+## Configuration File (Workflow)
 
 ```yaml
 name: Job Aggregator CI
@@ -64,36 +64,25 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
           cache: 'npm'
           cache-dependency-path: ./backend/package-lock.json
-      - run: npm ci
+
+      - name: Install dependencies
+        run: npm ci
         working-directory: ./backend
-      - run: npm run build:check
+
+      - name: TypeScript check
+        run: npm run build:check
         working-directory: ./backend
-      - run: npm run lint
+
+      - name: Linter
+        run: npm run lint
         working-directory: ./backend
-      - run: npm test
+
+      - name: Unit & Integration tests
+        run: npm test
         working-directory: ./backend
-```
-
-Merging to `main` is blocked if any step fails, enforced via GitHub branch protection rules.
-
----
-
-## Key Trade-offs
-
-- **No integration tests in v1** — mocks isolate the controller but don't test real DB behavior. A `docker-compose` setup in Actions is documented as a v2 evolution.
-- **Husky not used** — pre-commit hooks can be bypassed with `--no-verify`; CI is the authoritative gate.
-- **Vitest not considered** — project already uses Jest, no migration benefit.
-
----
-
-## Success Metrics
-
-- 0 merges possible on `main` with a failing step
-- 18 normalization cases — PASS ✅
-- 7 route cases across 3 endpoints — PASS ✅
-- Jest coverage ≥ 70% on `normalizer.js`
