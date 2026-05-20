@@ -8,8 +8,12 @@ import {
   HomeIcon,
   SearchIcon,
   HeartIcon,
+  ChartIcon,
   SettingsIcon,
   ShieldIcon,
+  BriefcaseIcon,
+  UsersIcon,
+  DatabaseIcon,
   LogoutIcon,
   SparklesIcon,
   ArrowRightIcon,
@@ -51,7 +55,39 @@ const userNav: NavItem[] = [
   },
 ];
 
-const adminNav: NavItem[] = [];
+const adminNav: NavItem[] = [
+  {
+    href: "/admin",
+    label: "Vue d'ensemble",
+    icon: <HomeIcon className="h-4 w-4" />,
+    exact: true,
+  },
+  {
+    href: "/admin/offers",
+    label: "Offres",
+    icon: <BriefcaseIcon className="h-4 w-4" />,
+  },
+  {
+    href: "/admin/users",
+    label: "Utilisateurs",
+    icon: <UsersIcon className="h-4 w-4" />,
+  },
+  {
+    href: "/admin/analytics",
+    label: "Analytics",
+    icon: <ChartIcon className="h-4 w-4" />,
+  },
+  {
+    href: "/admin/ingest",
+    label: "Ingestion data",
+    icon: <DatabaseIcon className="h-4 w-4" />,
+  },
+  {
+    href: "/settings",
+    label: "Paramètres",
+    icon: <SettingsIcon className="h-4 w-4" />,
+  },
+];
 
 export function Sidebar({ variant }: { variant: "user" | "admin" }) {
   const pathname = usePathname();
