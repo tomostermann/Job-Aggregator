@@ -6,20 +6,20 @@ Accepted
 
 ## Context
 
-The Job Aggregator project aggregates tech job offers from the WeLoveDevs API (~1800+ offers in the database).
-The goal is to provide users with recommendations **without asking them to fill out a profile**:
-the user types a natural language search (e.g. "Python internship Paris backend") and the system
-returns the most relevant offers, sorted by semantic similarity score.
+The Job Aggregator project collects tech job offers from the WeLoveDevs API (~1800+ offers stored in the database).
+The goal is to suggest relevant offers to users **without asking them to fill out a profile**:
+the user types a search in plain language (e.g. "Python internship Paris backend") and the system
+returns the most relevant offers, sorted by a relevance score.
 
 ### Initial Constraints
 
 | Constraint | Reason |
 |---|---|
-| Size ≤ 500 MB | Reasonable Docker build, no memory overload |
-| Result < 5 seconds per offer | No blocking latency for the user |
-| No fine-tuning at startup | Simple deployment, container starts directly |
-| Offline operation | No dependency on a paid external API |
-| Python stack | We already have a FastAPI microservice, we stay within it |
+| Size ≤ 500 MB | The model must fit in the Docker container without using too much memory |
+| Result in < 5 seconds | The user should not have to wait a long time |
+| No fine-tuning at startup | The model must work right away, without retraining on our data |
+| Works offline | No dependency on a paid external service |
+| Python stack | We already have a FastAPI microservice, we stay within the same technology |
 
 ---
 
@@ -27,17 +27,21 @@ returns the most relevant offers, sorted by semantic similarity score.
 
 We use **`sentence-transformers` with the `all-MiniLM-L6-v2` model**.
 
-### How It Works in Practice
+`sentence-transformers` is an open-source Python library that transforms a sentence into a list of numbers
+(called a **vector** or **embedding**) that represents its meaning. Two sentences that mean the same thing
+will produce similar vectors, even if they don't share any words.
 
-1. **Computing offer embeddings** (done once via `POST /compute-embeddings`):
-   - For each offer in the database, we concatenate its title + description
-   - We encode this text into a 384-dimensional vector (an "embedding")
-   - This vector is stored in the database in the `embedding` column (type `BYTEA`)
+### How It Works Step by Step
 
-2. **Real-time scoring** (on each search via `POST /score`):
-   - We encode the user's query into a vector
-   - We compute the **cosine similarity** between this vector and each stored offer vector
-   - We apply `sqrt(similarity) × 100` to get a score between 0 and 100
+1. **Pre-computing offer embeddings** (done once via `POST /compute-embeddings`):
+   - For each offer in the database, we join its title and description into one text
+   - We convert this text into a vector of 384 numbers (an "embedding" — a numerical representation of the meaning)
+   - This vector is saved in the database in the `embedding` column
+
+2. **Real-time scoring** (on every search via `POST /score`):
+   - We convert the user's query into a vector the same way
+   - We compute the **cosine similarity** (a mathematical measure between 0 and 1 that indicates how close two vectors are) between the query and each stored offer
+   - We apply `sqrt(similarity) × 100` to get a more readable score between 0 and 100
    - We apply a **location boost of +30%** if a word from the query matches the offer's city
    - We return the top N offers sorted by score
 
@@ -58,11 +62,11 @@ The most relevant result (Paris + Python) correctly ranks first.
 | Criterion | Value |
 |---|---|
 | Disk size | ~80 MB |
-| Vector dimensions | 384 |
-| Encoding time | ~2ms / offer |
+| Vector dimensions | 384 (i.e. each text is represented by 384 numbers) |
+| Encoding time | ~2ms per offer |
 | Fine-tuning required | No |
-| Language | Multilingual (fr/en) |
-| License | Apache 2.0 |
+| Language | Multilingual (French and English) |
+| License | Apache 2.0 (free, open-source) |
 
 ---
 
@@ -70,50 +74,49 @@ The most relevant result (Paris + Python) correctly ranks first.
 
 ### Alternative 1 — OpenAI API (`text-embedding-ada-002`)
 
-**Description**: Use the OpenAI API to compute embeddings on the fly, without hosting a model.
+**Description**: use OpenAI's paid API to compute embeddings, without hosting any model ourselves.
 
 **What we evaluated**:
-- The API returns very high-quality embeddings (1536 dimensions)
-- Integration is simple (a single HTTP request)
-- No need to host a model
+- The API produces very high-quality embeddings (1536 dimensions instead of 384)
+- Very simple to integrate (one HTTP call)
+- No need to download or host anything
 
 **Why we rejected it**:
-- **Cost**: usage-based billing (~$0.0001 / 1000 tokens). For 1800 offers × long descriptions,
-  the pre-computation cost is non-negligible, and above all we cannot afford a paid API
-  in a student project with no budget
-- **Network dependency**: if the OpenAI API is down, our feature is down
-- **Latency**: each search = one HTTP round-trip (~200-500ms) instead of ~2ms locally
+- **Cost**: the API charges per use (~$0.0001 per 1000 tokens). For 1800 offers with long descriptions,
+  the pre-computation cost adds up quickly — and a paid API is not realistic for a student project with no budget
+- **Network dependency**: if OpenAI's servers go down, our feature stops working too
+- **Latency**: each search requires an HTTP round-trip to OpenAI's servers (~200-500ms), compared to ~2ms when running locally
 - **Privacy**: offer descriptions are sent to external servers
 
 ### Alternative 2 — TF-IDF + cosine similarity (scikit-learn)
 
-**Description**: Classic keyword-matching approach with weighted terms,
-without a deep learning model.
+**Description**: a classic keyword-based search approach (TF-IDF stands for Term Frequency–Inverse Document Frequency —
+it weights words by how often they appear and how unique they are across all documents). No deep learning involved.
 
 **What we evaluated**:
-- Lightweight (~5 MB)
+- Very lightweight (~5 MB)
 - Very fast
 - No external dependency
 
 **Why we rejected it**:
 
-TF-IDF compares exact words, not concepts. Example:
+TF-IDF compares exact words, not meaning. Example:
 
 ```
 Query: "backend developer"
-Offer A: "Node.js Server Engineer"     → TF-IDF score = 0 (no words in common)
-Offer B: "backend developer React"     → TF-IDF score = high (identical words)
+Offer A: "Node.js Server Engineer"   → TF-IDF score = 0 (no words in common)
+Offer B: "backend developer React"   → TF-IDF score = high (exact word match)
 ```
 
 With sentence-transformers:
 ```
 Query: "backend developer"
-Offer A: "Node.js Server Engineer"     → score = 62 (semantically close)
-Offer B: "backend developer React"     → score = 78
+Offer A: "Node.js Server Engineer"   → score = 62 (semantically close, same job)
+Offer B: "backend developer React"   → score = 78
 ```
 
-TF-IDF would have returned 0 results for "server engineer" even though that is exactly
-what the user was looking for. Unacceptable for a recommendation feature.
+TF-IDF would return 0 results for "server engineer" even though that is exactly
+what the user is looking for. This is unacceptable for a recommendation feature.
 
 ---
 
@@ -123,8 +126,8 @@ what the user was looking for. Unacceptable for a recommendation feature.
 
 Initially, the score was simply `cosine_similarity × 100`.
 
-**Problem observed**: a similarity of 0.50 is actually an **excellent** match for this model,
-but displayed as "50/100" which gave the impression of mediocre relevance.
+**Problem**: for this type of model, a similarity of 0.50 is actually an **excellent** match,
+but it displayed as "50/100" which made it look like a mediocre result to the user.
 
 ```
 # Before
@@ -132,7 +135,8 @@ similarity = 0.50
 ai_score = int(0.50 * 100) = 50  ← looks weak to the user
 ```
 
-**Solution adopted**: `sqrt()` transformation that spreads the range upward without distorting the order.
+**Solution**: we apply a `sqrt()` (square root) transformation, which pushes the scores
+upward without changing the ranking order.
 
 ```
 # After
@@ -142,26 +146,27 @@ ai_score = int(sqrt(0.50) * 100) = int(0.707 * 100) = 70  ← more readable
 
 ### Attempt 2 — Min-max normalization
 
-We also tried normalizing scores so that the best result always showed ~95
-and the worst ~25, regardless of absolute values.
+We also tried rescaling scores so the best result always shows ~95
+and the worst ~25, no matter the actual values.
 
 ```python
 # Formula tested
 normalized = ((score - score_min) / (score_max - score_min)) * 70 + 25
 ```
 
-**Problem**: this approach **falsifies the statistics**. If all offers are barely relevant,
-the system still displays a score of 95 for the "best" one, which is misleading.
+**Problem**: this approach **gives a false impression**. If all offers are barely relevant,
+the system still shows a score of 95 for the "best" one — which is misleading.
+A score of 95 should mean "very relevant", not "least bad".
 
-**Decision**: abandoned in favor of `sqrt()` which preserves the absolute meaning of scores.
+**Decision**: abandoned in favor of `sqrt()` which keeps the real meaning of scores.
 
 ### Attempt 3 — Client-side score (computeOfferScore)
 
-Before integrating the microservice, we had a JS function on the frontend that calculated a score
-based on manual rules (keyword presence, offer age, salary filled in...).
+Before integrating the AI microservice, we had a JavaScript function in the frontend that calculated a score
+using manual rules (keyword presence, offer age, whether a salary was listed...).
 
 ```typescript
-// Score based on heuristics unrelated to the query
+// Score based on fixed rules, unrelated to the user's search
 function computeOfferScore(offer: Offer): number {
   const keywords = ["react", "python", "docker"...];
   const matches = keywords.filter(k => text.includes(k)).length;
@@ -170,25 +175,26 @@ function computeOfferScore(offer: Offer): number {
 }
 ```
 
-**Problem**: this score was **identical for all queries**. Whether the user searched for
-"Python" or "Java", a React offer always had the same score. It was useless as a relevance indicator.
+**Problem**: this score was **the same for every query**. Whether the user searched for
+"Python" or "Java", a React offer always got the same number. It measured offer "richness",
+not relevance to the user's actual search.
 
-**Decision**: replaced by the real AI score. The score is now only displayed if the offer
-comes from a real search (`offer.ai_score !== undefined`).
+**Decision**: replaced by the real AI score. The score is now only shown if the offer
+comes from an actual search (`offer.ai_score !== undefined`).
 
 ---
 
 ## Known Limitations
 
-- **Low absolute scores**: even with `sqrt()`, scores remain below 80 for most queries.
-  This is inherent to the model and does not reflect poor quality.
-- **Static embeddings**: vectors are computed at ingestion time. If an offer description changes,
-  `POST /compute-embeddings` must be re-run.
+- **Low absolute scores**: even with `sqrt()`, scores rarely go above 80 for most queries.
+  This is a characteristic of the model, not a sign of poor results.
+- **Static embeddings**: vectors are computed when an offer is ingested. If an offer's description changes,
+  `POST /compute-embeddings` must be re-run to update it.
 - **No user personalization**: dashboard recommendations use a generic query
-  (`"web fullstack developer internship CDI"`). The user profile is not taken into account
-  (feature not developed).
-- **Optimized for English**: the `all-MiniLM-L6-v2` model works multilingually but
-  its performance is slightly better on English text.
+  (`"web fullstack developer internship CDI"`). The user's actual profile is not taken into account
+  (this feature was not built).
+- **Better in English**: the `all-MiniLM-L6-v2` model supports multiple languages but performs
+  slightly better on English text than French.
 
 ---
 
@@ -196,7 +202,7 @@ comes from a real search (`offer.ai_score !== undefined`).
 
 ### Manual Tests
 
-| Query | Expected top result | Actual result | Consistent? |
+| Query | Expected top result | Actual result | Correct? |
 |---|---|---|---|
 | "python internship paris" | Python offer in Paris | Software Engineer Python / FastAPI — Paris | ✅ |
 | "python internship paris" (before location boost) | Python offer in Paris | Experienced Python Dev — **Lille** | ❌ |
@@ -206,34 +212,34 @@ comes from a real search (`offer.ai_score !== undefined`).
 ### The Location Problem and Its Fix
 
 Before adding the boost, a Python offer in Lille could score higher than a Python offer in Paris,
-because semantic similarity does not account for geographic location.
+because the semantic similarity (the comparison of meanings) does not take geographic location into account.
 
-**Fix implemented**: we extract the words from the query and check if any of them
-appears in the offer's city. If so, the score is multiplied by 1.3.
+**Fix**: we extract the words from the query and check whether any of them appears in the offer's city.
+If so, the score is multiplied by 1.3.
 
 ```python
 query_words = ["internship", "python", "paris"]
 location_text = "paris, france"
 
-# "paris" is in query_words AND in location_text → boost applied
+# "paris" is in both query_words and location_text → boost applied
 if any(word in location_text for word in query_words):
     base_score *= 1.3
 ```
 
 ### Measured Response Time
 
-Tested with `curl` on 1800+ offers:
-- `POST /score`: ~300-400ms (query embedding computation + full vector comparison)
+Tested with `curl` (a command-line tool to make HTTP requests) on 1800+ offers:
+- `POST /score`: ~300-400ms (encoding the query + comparing it against all stored vectors)
 - Target < 500ms: **achieved** ✅
 
 ---
 
 ## Evidence in the Code
 
-- `ia/main.py` — complete FastAPI microservice (health, compute-embeddings, score)
-- `ia/Dockerfile` — model pre-downloaded at build time (`RUN python -c "...SentenceTransformer(...)"`)
-- `backend/src/routes/recommendations.ts` — proxy route to the microservice
-- `frontend/app/offers/page.tsx` — switches to `/api/recommendations` in "AI Relevance" mode
-- `frontend/components/OfferCard.tsx` — displays score only if `offer.ai_score !== undefined`
+- `ia/main.py` — full FastAPI microservice (health check, compute-embeddings, score)
+- `ia/Dockerfile` — model downloaded at build time so it is available when the container starts
+- `backend/src/routes/recommendations.ts` — backend route that forwards requests to the microservice
+- `frontend/app/offers/page.tsx` — switches to `/api/recommendations` when "AI Relevance" mode is selected
+- `frontend/components/OfferCard.tsx` — only shows the score if `offer.ai_score !== undefined`
 - `backend/src/config/schema.sql` — `embedding BYTEA` column on the `offers` table
-- `docker-compose.yml` — `ia` service on port 8000, `app-network`
+- `docker-compose.yml` — `ia` service on port 8000, connected via `app-network`
