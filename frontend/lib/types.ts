@@ -55,6 +55,7 @@ export interface OffersQuery {
   q?: string;
   location?: string;
   contract_type?: string;
+  status?: "ghost" | "fresh";
   page?: number;
   size?: number;
 }

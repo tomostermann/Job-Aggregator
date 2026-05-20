@@ -43,7 +43,8 @@ export function AppShell({
     return null;
   }
 
-  const variant: "user" | "admin" = requireRole === "admin" ? "admin" : "user";
+  const variant: "user" | "admin" =
+    user?.role === "admin" ? "admin" : "user";
 
   return (
     <div className="flex min-h-screen w-full">
