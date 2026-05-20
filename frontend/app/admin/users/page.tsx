@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { AppShell } from "@/components/AppShell";
-import { ShieldIcon, RefreshIcon } from "@/components/Icons";
+import { ShieldIcon, RefreshIcon, TrashIcon } from "@/components/Icons";
 import { api, type AdminUser } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
 import { useToast } from "@/lib/toast-context";
@@ -64,8 +64,26 @@ function Inner() {
     }
   };
 
-  // Suppression de compte non disponible côté backend — l'admin peut uniquement
-  // changer le rôle (PATCH /api/admin/users/:id).
+  const onDelete = async (u: AdminUser) => {
+    if (!token) return;
+    const name = fullName(u) || u.email;
+    if (
+      !window.confirm(
+        `Supprimer définitivement le compte de ${name} ?\n\nLes favoris seront effacés et ses offres créées resteront mais sans propriétaire.`,
+      )
+    )
+      return;
+    setPending(u.id);
+    try {
+      await api.adminDeleteUser(token, u.id);
+      setUsers((prev) => prev.filter((x) => x.id !== u.id));
+      push(`${u.email} supprimé`, "success");
+    } catch (err) {
+      push(err instanceof Error ? err.message : "Erreur", "error");
+    } finally {
+      setPending(null);
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -163,6 +181,20 @@ function Inner() {
                         Révoquer admin
                       </button>
                     )}
+                    <button
+                      type="button"
+                      onClick={() => onDelete(u)}
+                      disabled={pending === u.id || isMe}
+                      title={
+                        isMe
+                          ? "Vous ne pouvez pas supprimer votre propre compte"
+                          : "Supprimer ce compte"
+                      }
+                      className="btn !py-1.5 !px-3 !text-xs bg-flame-500/10 text-flame-600 border border-flame-500/30 hover:bg-flame-500 hover:text-white disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-flame-500/10 disabled:hover:text-flame-600"
+                    >
+                      <TrashIcon className="h-3.5 w-3.5" />
+                      {pending === u.id ? "…" : "Supprimer"}
+                    </button>
                   </div>
                 </div>
               );
