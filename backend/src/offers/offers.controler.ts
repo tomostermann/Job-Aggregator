@@ -6,7 +6,8 @@ import {
   createOffer,
   getOfferRecruiter,
 } from "./offers.service";
-import { sendMail } from "../utils/mail";
+import { sendMail, MailAttachment } from "../utils/mail";
+import { getUserCv } from "../auth/auth.service";
 
 export async function listOffers(req: Request, res: Response) {
   try {
@@ -69,6 +70,7 @@ export async function applyToOffer(req: Request, res: Response) {
       firstName?: string;
       lastName?: string;
       phone?: string;
+      signature?: string;
     } | undefined;
 
     if (!user?.email) {
@@ -92,26 +94,61 @@ export async function applyToOffer(req: Request, res: Response) {
       return res.status(400).json({ error: "Le message est trop long (max 5000 caractères)" });
     }
 
-    const candidateName =
-      [user.firstName, user.lastName].filter(Boolean).join(" ") || user.email;
-    const subject = `Candidature — ${recruiter.offerTitle}${
+    const defaultSubject = `Candidature — ${recruiter.offerTitle}${
       recruiter.offerCompany ? ` (${recruiter.offerCompany})` : ""
     }`;
+    const subjectInput =
+      typeof body.subject === "string" ? body.subject.trim() : "";
+    const subject = subjectInput.length > 0 ? subjectInput : defaultSubject;
+    if (subject.length > 200) {
+      return res.status(400).json({ error: "L'objet est trop long (max 200 caractères)" });
+    }
 
-    const signatureLines = [
-      "—",
-      candidateName,
-      user.email,
-      user.phone ? `Tél : ${user.phone}` : null,
-    ].filter(Boolean) as string[];
+    const signatureInput =
+      typeof body.signature === "string" ? body.signature.trim() : null;
+    const signature =
+      signatureInput !== null ? signatureInput : user.signature?.trim();
+    if (signature && signature.length > 2000) {
+      return res.status(400).json({ error: "La signature est trop longue (max 2000 caractères)" });
+    }
+    const text = signature ? `${message}\n\n${signature}` : message;
 
-    const text = `${message}\n\n${signatureLines.join("\n")}`;
+    const attachments: MailAttachment[] = [];
+
+    if (body.includeCv === true) {
+      const cv = await getUserCv(user.id);
+      if (cv) {
+        attachments.push({
+          filename: cv.filename,
+          content: cv.data,
+          contentType: cv.mimetype,
+        });
+      }
+    }
+
+    if (Array.isArray(body.attachments)) {
+      for (const att of body.attachments as Array<Record<string, unknown>>) {
+        if (
+          typeof att?.filename !== "string" ||
+          typeof att?.mimetype !== "string" ||
+          typeof att?.data !== "string"
+        ) continue;
+        const buf = Buffer.from(att.data, "base64");
+        if (buf.length === 0 || buf.length > 5 * 1024 * 1024) continue;
+        attachments.push({
+          filename: att.filename,
+          content: buf,
+          contentType: att.mimetype,
+        });
+      }
+    }
 
     const result = await sendMail({
       to: recruiter.email,
       replyTo: user.email,
       subject,
       text,
+      attachments: attachments.length ? attachments : undefined,
     });
 
     res.status(200).json({ ok: true, delivered: result.delivered });
