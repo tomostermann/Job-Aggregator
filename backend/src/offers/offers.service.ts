@@ -15,8 +15,19 @@ export async function getOffers(filters: OffersQuery) {
     values.push(`%${filters.contract_type}%`);
   }
   if (filters.q) {
-    conditions.push(`(title ILIKE $${i} OR description ILIKE $${i++})`);
+    conditions.push(
+      `(title ILIKE $${i} OR description ILIKE $${i} OR contract_type ILIKE $${i} OR company ILIKE $${i++})`,
+    );
     values.push(`%${filters.q}%`);
+  }
+  if (filters.status === "ghost") {
+    conditions.push(
+      `published_at IS NOT NULL AND published_at < NOW() - INTERVAL '60 days'`,
+    );
+  } else if (filters.status === "fresh") {
+    conditions.push(
+      `published_at IS NOT NULL AND published_at >= NOW() - INTERVAL '7 days'`,
+    );
   }
 
   const where = conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
