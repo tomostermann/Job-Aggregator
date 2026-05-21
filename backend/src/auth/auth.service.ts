@@ -3,6 +3,7 @@ import { randomUUID } from "crypto";
 import pool from "../config/db";
 import { signToken, JwtPayload } from "../utils/jwt";
 import { RegisterDto, LoginDto } from "./auth.dto";
+import { ENV } from "../config/env";
 
 /** Récupère le profil complet d'un utilisateur et construit le payload JWT. */
 export const getUserWithProfile = async (userId: string): Promise<JwtPayload | null> => {
@@ -40,13 +41,17 @@ export const register = async (dto: RegisterDto) => {
   const hashed = await bcrypt.hash(dto.password, 10);
   const id = randomUUID();
 
+  // Si l'email est dans ADMIN_EMAILS, le compte est créé directement en admin
+  const isAdmin = ENV.ADMIN_EMAILS.includes(dto.email.toLowerCase());
+  const role = isAdmin ? "admin" : "user";
+
   await pool.query(
     "INSERT INTO users (id, email, password_hash, role, first_name, last_name) VALUES ($1, $2, $3, $4, $5, $6)",
-    [id, dto.email, hashed, "user", dto.firstName ?? null, dto.lastName ?? null]
+    [id, dto.email, hashed, role, dto.firstName ?? null, dto.lastName ?? null]
   );
 
   const payload = await getUserWithProfile(id);
-  const token = signToken(payload ?? { id, role: "user", email: dto.email });
+  const token = signToken(payload ?? { id, role, email: dto.email });
   return { token };
 };
 
