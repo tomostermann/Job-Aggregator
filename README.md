@@ -123,3 +123,8 @@ All decision records and product documentation are available in the [`docs/`](./
 | [`docs/adr/ADR-001-stack.md`](./docs/adr/ADR-001-stack.md) | Technical stack decision |
 | `docs/adr/ADR-002-database.md`                             | Database choice — TODO   |
 | `docs/market-scan.md`                                      | Competitive analysis     |
+
+---
+## URL
+
+[https://job-aggregator-test.vercel.app/](https://job-aggregator-test.vercel.app/)
