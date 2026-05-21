@@ -227,8 +227,12 @@ export function Sidebar({ variant }: { variant: "user" | "admin" }) {
 
 // Bottom nav: 4 items max — Settings & Ingestion exclus (accessibles via menu top-right)
 const MOBILE_EXCLUDED = ["/settings", "/admin/ingest"];
-const userMobileNav: NavItem[] = userNav.filter((it) => !MOBILE_EXCLUDED.includes(it.href)).slice(0, 4);
-const adminMobileNav: NavItem[] = adminNav.filter((it) => !MOBILE_EXCLUDED.includes(it.href)).slice(0, 4);
+const userMobileNav: NavItem[] = userNav
+  .filter((it) => !MOBILE_EXCLUDED.includes(it.href))
+  .slice(0, 4);
+const adminMobileNav: NavItem[] = adminNav
+  .filter((it) => !MOBILE_EXCLUDED.includes(it.href))
+  .slice(0, 4);
 
 export function MobileNav({ variant }: { variant: "user" | "admin" }) {
   const pathname = usePathname();

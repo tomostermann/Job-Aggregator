@@ -211,7 +211,7 @@ export function ApplyModal({ offer, user, token, onClose }: Props) {
               id="apply-message"
               required
               className="input min-h-[180px] !rounded-xl"
-              placeholder={`Bonjour${recruiterName ? " " + recruiterName : ""},\n\nJe me permets de vous contacter au sujet du poste « ${offer.title} »…\n\n`}
+              placeholder={`Bonjour,\n\nJe me permets de vous contacter au sujet du poste « ${offer.title} »…\n\n`}
               value={message}
               onChange={(e) => setMessage(e.target.value)}
               maxLength={5000}

@@ -7,6 +7,19 @@ function stripHtml(str) {
     .trim();
 }
 
+const CONTRACT_TYPE_MAP = {
+  internship: "Stage",
+  apprenticeship: "Alternance",
+  fixedTerm: "CDD",
+  freelance: "Freelance",
+  permanent: "CDI",
+  spontaneous: "Candidature spontanée",
+};
+
+function translateContractType(raw) {
+  return CONTRACT_TYPE_MAP[raw] || raw;
+}
+
 /**
  * Normalise une offre brute WeLoveDevs
  *
@@ -22,12 +35,9 @@ function stripHtml(str) {
  *   - details.salary
  */
 function normalizeOffer(raw) {
-  // Salaire depuis details.salary
-  // ex: { min: 45, max: 60, currency: "€", recurrence: "year", maxPerYear: 60 }
   const salary = raw.details?.salary;
   let salaryStr = null;
   if (salary?.min && salary?.max) {
-    const currency = salary.currency || "€";
     const per = salary.recurrence === "year" ? "k€/an" : salary.currency || "€";
     salaryStr = `${salary.min} - ${salary.max} ${per}`;
   } else if (salary?.min) {
@@ -35,10 +45,9 @@ function normalizeOffer(raw) {
     salaryStr = `${salary.min}+ ${per}`;
   }
 
-  // Types de contrat (tableau)
   const contractTypes = Array.isArray(raw.contractTypes)
-    ? raw.contractTypes.join(", ")
-    : raw.contractTypes || "";
+    ? raw.contractTypes.map(translateContractType).join(", ")
+    : translateContractType(raw.contractTypes || "");
 
   return {
     source_id: String(raw.id || raw.objectID || ""),

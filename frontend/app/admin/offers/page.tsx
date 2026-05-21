@@ -15,7 +15,7 @@ import { api } from "@/lib/api";
 import type { Offer } from "@/lib/types";
 import { useAuth } from "@/lib/auth-context";
 import { useToast } from "@/lib/toast-context";
-import { computeOfferScore, isGhostJob } from "@/lib/score";
+import { isGhostJob } from "@/lib/score";
 import { formatRelativeDate } from "@/lib/format";
 
 const PAGE_SIZE = 25;
@@ -170,7 +170,7 @@ function Inner() {
             </div>
           ) : (
             displayed.map((o) => {
-              const score = computeOfferScore(o);
+              const score = typeof o.ai_score === "number" ? o.ai_score : null;
               const ghost = isGhostJob(o);
               return (
                 <div
@@ -200,19 +200,23 @@ function Inner() {
                     </span>
                   </div>
                   <div className="hidden md:block">
-                    <span
-                      className={`text-sm font-bold font-display ${
-                        score >= 80
-                          ? "text-mint-600"
-                          : score >= 60
-                            ? "text-ink-700"
-                            : score >= 45
-                              ? "text-amber-500"
-                              : "text-flame-600"
-                      }`}
-                    >
-                      {score}
-                    </span>
+                    {score !== null ? (
+                      <span
+                        className={`text-sm font-bold font-display ${
+                          score >= 80
+                            ? "text-mint-600"
+                            : score >= 60
+                              ? "text-ink-700"
+                              : score >= 45
+                                ? "text-amber-500"
+                                : "text-flame-600"
+                        }`}
+                      >
+                        {score}
+                      </span>
+                    ) : (
+                      <span className="text-slate-muted text-xs">—</span>
+                    )}
                   </div>
                   <div className="hidden md:block text-xs text-slate-muted">
                     {formatRelativeDate(o.published_at)}

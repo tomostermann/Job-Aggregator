@@ -12,4 +12,9 @@ export const ENV = {
   SMTP_PASS: process.env.SMTP_PASS ?? "",
   SMTP_FROM: process.env.SMTP_FROM ?? process.env.SMTP_USER ?? "noreply@jobaggregator.local",
   SMTP_SECURE: process.env.SMTP_SECURE === "true",
+  // Emails séparés par des virgules dont le compte sera automatiquement admin à l'inscription
+  ADMIN_EMAILS: (process.env.ADMIN_EMAILS ?? "")
+    .split(",")
+    .map((e) => e.trim().toLowerCase())
+    .filter(Boolean),
 };

@@ -1,4 +1,4 @@
-import type { IngestResult, Offer, OfferList, OffersQuery } from "./types";
+import type { IngestResult, Offer, OfferList, OffersQuery, RecommendationResult } from "./types";
 
 const PUBLIC_API_BASE =
   process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:5001";
@@ -225,6 +225,11 @@ export const api = {
       "/api/saved/migrate",
       { method: "POST", body: JSON.stringify({ offerIds }) },
       token,
+    ),
+
+  recommendations: (query: string, limit = 10) =>
+    request<RecommendationResult[]>(
+      `/api/recommendations${buildQuery({ q: query, limit })}`,
     ),
 };
 

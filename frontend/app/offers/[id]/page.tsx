@@ -20,7 +20,6 @@ import { api } from "@/lib/api";
 import type { Offer } from "@/lib/types";
 import { formatDate, formatRelativeDate, formatSalary } from "@/lib/format";
 import {
-  computeOfferScore,
   extractTags,
   isGhostJob,
   summarizeOffer,
@@ -92,11 +91,12 @@ function DetailInner() {
     );
   }
 
-  const score = computeOfferScore(offer);
+  const score = typeof offer.ai_score === "number" ? offer.ai_score : null;
   const ghost = isGhostJob(offer);
   const tags = extractTags(offer);
   const saved = isSaved(offer.id);
   const summary = summarizeOffer(offer);
+  void summary;
 
   return (
     <div className="space-y-6">
@@ -190,25 +190,27 @@ function DetailInner() {
         </div>
 
         <aside className="space-y-4 lg:sticky lg:top-6 lg:self-start">
-          <div className="card p-5">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-[10px] font-mono uppercase tracking-widest text-slate-muted">
-                Score de pertinence IA
-              </span>
-              <span className={`font-display font-bold ${scoreColor(score)}`}>
-                {score} / 100
-              </span>
+          {score !== null && (
+            <div className="card p-5">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-[10px] font-mono uppercase tracking-widest text-slate-muted">
+                  Score de pertinence IA
+                </span>
+                <span className={`font-display font-bold ${scoreColor(score)}`}>
+                  {score} / 100
+                </span>
+              </div>
+              <div className="h-2 rounded-full bg-slate-100 overflow-hidden">
+                <div
+                  className={`h-full rounded-full ${scoreBg(score)}`}
+                  style={{ width: `${score}%` }}
+                />
+              </div>
+              <div className="mt-2 text-xs text-slate-muted">
+                Score calculé par le modèle IA
+              </div>
             </div>
-            <div className="h-2 rounded-full bg-slate-100 overflow-hidden">
-              <div
-                className={`h-full rounded-full ${scoreBg(score)}`}
-                style={{ width: `${score}%` }}
-              />
-            </div>
-            <div className="mt-2 text-xs text-slate-muted">
-              Classification : extraction de mots-clés + signaux marché
-            </div>
-          </div>
+          )}
 
           <div className="card p-5 space-y-3 text-sm">
             <DetailItem
@@ -223,7 +225,9 @@ function DetailInner() {
             />
             <DetailItem
               label="Rémunération"
-              value={offer.salary ? formatSalary(offer.salary) : "Non communiqué"}
+              value={
+                offer.salary ? formatSalary(offer.salary) : "Non communiqué"
+              }
               icon={<EuroIcon className="h-4 w-4" />}
             />
             <DetailItem

@@ -38,6 +38,7 @@ export interface Offer {
   source?: string | null;
   published_at: string | null;
   created_at?: string | null;
+  ai_score?: number; // score réel du microservice IA (0-100), si disponible
   created_by?: string | null;
   recruiter_email?: string | null;
   recruiter_first_name?: string | null;
@@ -66,4 +67,14 @@ export interface IngestResult {
   inserted?: number;
   skipped?: number;
   error?: string;
+}
+
+export interface RecommendationResult {
+  id: string;
+  title: string;
+  company: string;
+  location: string;
+  contract_type: string;
+  salary: string | null;
+  ai_score: number;
 }
