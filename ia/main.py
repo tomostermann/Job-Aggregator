@@ -188,3 +188,69 @@ def score_offers(req: ScoreRequest):
     # Trie par score décroissant et retourne les `limit` meilleurs
     results.sort(key=lambda x: x.ai_score, reverse=True)
     return results[: req.limit]
+
+
+# POST /store-scores
+# Calcule un ai_score pour toutes les offres et le persiste en base.
+# Utilise une requête de référence générique pour mesurer la "qualité" globale.
+
+REFERENCE_QUERY = "stage alternance CDI développeur logiciel ingénieur informatique"
+
+
+@app.post("/store-scores")
+def store_scores():
+    """
+    Pour chaque offre ayant un embedding, calcule la cosine similarity
+    avec une requête de référence générique et stocke le résultat dans
+    la colonne ai_score de la table offers.
+    Appelé automatiquement après chaque ingestion.
+    """
+    conn = get_db()
+    cur = conn.cursor()
+
+    cur.execute(
+        "SELECT id, title, company, location, contract_type, salary, embedding "
+        "FROM offers WHERE embedding IS NOT NULL"
+    )
+    rows = cur.fetchall()
+
+    if not rows:
+        conn.close()
+        return {"message": "Aucun embedding disponible", "updated": 0}
+
+    print(f"[IA] Calcul des ai_scores pour {len(rows)} offres...")
+
+    # Embedding de la requête de référence
+    ref_embedding = model.encode(REFERENCE_QUERY, normalize_embeddings=True)
+    query_words = [w.lower() for w in REFERENCE_QUERY.split() if len(w) > 2]
+
+    updated = 0
+    for row in rows:
+        offer_id, title, company, location, contract_type, salary, embedding_bytes = row
+
+        embedding = np.frombuffer(bytes(embedding_bytes), dtype=np.float32)
+        norm = np.linalg.norm(embedding)
+        if norm == 0:
+            continue
+        embedding_normalized = embedding / norm
+
+        similarity = float(np.dot(ref_embedding, embedding_normalized))
+        base_score = float(np.sqrt(max(0.0, similarity))) * 100
+
+        location_text = (location or "").lower()
+        if any(word in location_text for word in query_words):
+            base_score *= 1.3
+
+        ai_score = max(0, min(100, int(base_score)))
+
+        cur.execute(
+            "UPDATE offers SET ai_score = %s WHERE id = %s",
+            (ai_score, offer_id),
+        )
+        updated += 1
+
+    conn.commit()
+    conn.close()
+
+    print(f"[IA] {updated} ai_scores mis à jour ✓")
+    return {"message": "Scores calculés et stockés", "updated": updated}

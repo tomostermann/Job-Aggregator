@@ -49,7 +49,7 @@ export async function getOffers(filters: OffersQuery) {
   values.push(offset);
 
   const dataQuery = `
-    SELECT id, title, company, location, contract_type, salary, published_at
+    SELECT id, title, company, location, contract_type, salary, published_at, ai_score
     FROM offers
     ${where}
     ORDER BY published_at DESC NULLS LAST

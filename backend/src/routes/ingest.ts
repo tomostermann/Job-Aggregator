@@ -52,6 +52,21 @@ router.post("/", async (req: Request, res: Response) => {
 
     console.log(`[Ingest] Terminé — ${inserted} insérées, ${skipped} ignorées (doublons)`);
 
+    // Lance les calculs IA en arrière-plan (sans bloquer la réponse)
+    const IA_URL = process.env.IA_URL ?? "http://ia:8000";
+    (async () => {
+      try {
+        // 1. Calcule les embeddings pour les nouvelles offres
+        await fetch(`${IA_URL}/compute-embeddings`, { method: "POST" });
+        console.log("[Ingest] Embeddings calculés ✓");
+        // 2. Stocke les ai_scores dans la colonne offers.ai_score
+        await fetch(`${IA_URL}/store-scores`, { method: "POST" });
+        console.log("[Ingest] Scores IA stockés ✓");
+      } catch (iaErr) {
+        console.warn("[Ingest] Avertissement : microservice IA inaccessible :", iaErr);
+      }
+    })();
+
     res.json({
       success: true,
       total: rawOffers.length,

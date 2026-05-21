@@ -48,6 +48,9 @@ CREATE TABLE IF NOT EXISTS offers (
 
 -- Migration : ajoute created_by si la table existait déjà
 ALTER TABLE offers ADD COLUMN IF NOT EXISTS created_by UUID REFERENCES users(id) ON DELETE SET NULL;
+-- Migration : embedding vectoriel (microservice IA) et score de pertinence
+ALTER TABLE offers ADD COLUMN IF NOT EXISTS embedding BYTEA;
+ALTER TABLE offers ADD COLUMN IF NOT EXISTS ai_score INTEGER;
 
 -- Saved offers by users
 CREATE TABLE IF NOT EXISTS saved_offers (
