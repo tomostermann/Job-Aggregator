@@ -276,15 +276,22 @@ function OffersInner() {
             onChange={(e) => setSearch(e.target.value)}
             aria-label="Rechercher des offres"
           />
-          <select
-            value={sort}
-            onChange={(e) => setSort(e.target.value as SortMode)}
-            className="text-sm bg-slate-50 border border-slate-line rounded-full px-3 py-1.5 mr-1 focus:outline-none focus:ring-2 focus:ring-ink-500/20"
-            aria-label="Tri des offres"
-          >
-            <option value="ia">Pertinence IA</option>
-            <option value="recent">Plus récent</option>
-          </select>
+          <div className="flex items-center gap-1 mr-1 shrink-0" role="group" aria-label="Tri des offres">
+            {(["ia", "recent"] as SortMode[]).map((s) => (
+              <button
+                key={s}
+                type="button"
+                onClick={() => setSort(s)}
+                className={`px-2.5 py-1.5 rounded-full text-xs font-semibold transition whitespace-nowrap ${
+                  sort === s
+                    ? "bg-ink-600 text-white"
+                    : "text-slate-muted hover:bg-slate-100"
+                }`}
+              >
+                {s === "ia" ? "✦ IA" : "Récent"}
+              </button>
+            ))}
+          </div>
         </div>
 
         {error && (

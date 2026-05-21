@@ -294,11 +294,9 @@ function Inner() {
                   </div>
                 </div>
               )}
-              <div>
-                <span className="text-xs text-slate-muted">
-                  * : Informations requises pour le poste
-                </span>
-              </div>
+              <span className="text-xs text-slate-muted">
+                * : Champs obligatoires
+              </span>
             </div>
           </div>
 

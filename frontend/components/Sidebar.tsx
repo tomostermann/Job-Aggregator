@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import { useState } from "react";
 import { Logo } from "./Logo";
 import { useAuth } from "@/lib/auth-context";
 import {
@@ -24,6 +25,7 @@ import { initialsOf, displayUserName } from "@/lib/format";
 interface NavItem {
   href: string;
   label: string;
+  shortLabel?: string; // label abrégé pour la bottom bar mobile
   icon: ReactNode;
   exact?: boolean;
 }
@@ -44,6 +46,7 @@ const userNav: NavItem[] = [
   {
     href: "/offers/new",
     label: "Créer une annonce",
+    shortLabel: "Créer",
     icon: <SparklesIcon className="h-4 w-4" />,
     exact: true,
   },
@@ -59,6 +62,7 @@ const adminNav: NavItem[] = [
   {
     href: "/admin",
     label: "Vue d'ensemble",
+    shortLabel: "Accueil",
     icon: <HomeIcon className="h-4 w-4" />,
     exact: true,
   },
@@ -221,10 +225,14 @@ export function Sidebar({ variant }: { variant: "user" | "admin" }) {
   );
 }
 
+// Bottom nav: 4 items max — Settings & Ingestion exclus (accessibles via menu top-right)
+const MOBILE_EXCLUDED = ["/settings", "/admin/ingest"];
+const userMobileNav: NavItem[] = userNav.filter((it) => !MOBILE_EXCLUDED.includes(it.href)).slice(0, 4);
+const adminMobileNav: NavItem[] = adminNav.filter((it) => !MOBILE_EXCLUDED.includes(it.href)).slice(0, 4);
+
 export function MobileNav({ variant }: { variant: "user" | "admin" }) {
   const pathname = usePathname();
-  const items =
-    variant === "admin" ? adminNav.slice(0, 4) : userNav.slice(0, 4);
+  const items = variant === "admin" ? adminMobileNav : userMobileNav;
 
   const isActive = (it: NavItem) =>
     it.exact
@@ -261,11 +269,139 @@ export function MobileNav({ variant }: { variant: "user" | "admin" }) {
                 }`}
               />
               {it.icon}
-              {it.label}
+              {it.shortLabel ?? it.label}
             </Link>
           );
         })}
       </div>
     </nav>
+  );
+}
+
+export function MobileHeader({ variant }: { variant: "user" | "admin" }) {
+  const { user, logout } = useAuth();
+  const router = useRouter();
+  const [open, setOpen] = useState(false);
+
+  const onLogout = () => {
+    logout();
+    router.push("/");
+    setOpen(false);
+  };
+
+  return (
+    <header className="md:hidden sticky top-0 z-30 flex items-center justify-between gap-3 border-b border-slate-line bg-white/95 px-4 backdrop-blur h-14">
+      <Logo />
+
+      {variant === "admin" && (
+        <div className="flex items-center gap-1 rounded-full border border-flame-500/40 bg-flame-500/10 px-2.5 py-1 text-[10px] font-semibold text-flame-600">
+          <ShieldIcon className="h-3 w-3" />
+          Admin
+        </div>
+      )}
+
+      <div className="relative ml-auto">
+        <button
+          type="button"
+          onClick={() => setOpen((v) => !v)}
+          aria-label="Menu utilisateur"
+          aria-expanded={open}
+          className="flex items-center"
+        >
+          {user ? (
+            <div
+              className="flex h-9 w-9 items-center justify-center rounded-full text-sm font-bold text-white shadow-sm ring-2 ring-white"
+              style={{
+                background:
+                  variant === "admin"
+                    ? "linear-gradient(135deg, #FF5733, #E63E1A)"
+                    : "linear-gradient(135deg, #0A2EFF, #3D5AFE)",
+              }}
+            >
+              {initialsOf(
+                user.firstName && user.lastName
+                  ? `${user.firstName} ${user.lastName}`
+                  : user.email || user.id || "??",
+              )}
+            </div>
+          ) : (
+            <span className="flex items-center gap-1.5 rounded-full bg-ink-600 px-3 py-1.5 text-xs font-semibold text-white shadow-sm">
+              Se connecter
+              <ArrowRightIcon className="h-3 w-3" />
+            </span>
+          )}
+        </button>
+
+        {open && (
+          <>
+            {/* Backdrop */}
+            <div
+              className="fixed inset-0 z-10"
+              onClick={() => setOpen(false)}
+              aria-hidden
+            />
+            {/* Dropdown */}
+            <div className="absolute right-0 top-full z-20 mt-2 w-52 rounded-2xl border border-slate-line bg-white p-1.5 shadow-xl">
+              {user ? (
+                <>
+                  <div className="border-b border-slate-line px-3 py-2.5 mb-1">
+                    <div className="text-sm font-semibold text-slate-ink truncate">
+                      {displayUserName(user)}
+                    </div>
+                    <div className="text-[11px] text-slate-muted truncate mt-0.5">
+                      {user.email}
+                    </div>
+                  </div>
+                  {variant === "admin" && (
+                    <Link
+                      href="/admin/ingest"
+                      onClick={() => setOpen(false)}
+                      className="flex items-center gap-2.5 rounded-xl px-3 py-2 text-sm text-slate-ink hover:bg-flame-500/10 transition"
+                    >
+                      <DatabaseIcon className="h-4 w-4 text-flame-500" />
+                      Ingestion data
+                    </Link>
+                  )}
+                  <Link
+                    href="/settings"
+                    onClick={() => setOpen(false)}
+                    className="flex items-center gap-2.5 rounded-xl px-3 py-2 text-sm text-slate-ink hover:bg-ink-50 transition"
+                  >
+                    <SettingsIcon className="h-4 w-4 text-slate-muted" />
+                    Paramètres
+                  </Link>
+                  <button
+                    type="button"
+                    onClick={onLogout}
+                    className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-sm text-flame-600 hover:bg-flame-500/10 transition"
+                  >
+                    <LogoutIcon className="h-4 w-4" />
+                    Déconnexion
+                  </button>
+                </>
+              ) : (
+                <>
+                  <Link
+                    href="/login"
+                    onClick={() => setOpen(false)}
+                    className="flex items-center gap-2.5 rounded-xl px-3 py-2 text-sm font-medium text-ink-700 hover:bg-ink-50 transition"
+                  >
+                    <ArrowRightIcon className="h-4 w-4" />
+                    Se connecter
+                  </Link>
+                  <Link
+                    href="/register"
+                    onClick={() => setOpen(false)}
+                    className="flex items-center gap-2.5 rounded-xl px-3 py-2 text-sm text-slate-muted hover:bg-slate-100/60 transition"
+                  >
+                    Créer un compte
+                  </Link>
+                </>
+              )}
+            </div>
+          </>
+        )}
+      </div>
+    </header>
   );
 }

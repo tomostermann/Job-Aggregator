@@ -118,22 +118,24 @@ function Inner() {
         </button>
       </header>
 
-      <div className="card p-2 flex items-center gap-2">
-        <span className="px-3 text-slate-muted">
-          <SearchIcon className="h-5 w-5" />
-        </span>
-        <input
-          className="flex-1 bg-transparent outline-none py-2 text-sm"
-          placeholder="Rechercher par titre ou description…"
-          value={filter}
-          onChange={(e) => setFilter(e.target.value)}
-        />
-        <div className="flex items-center gap-1 pr-1">
+      <div className="card p-2 flex flex-col gap-1.5">
+        <div className="flex items-center gap-2">
+          <span className="px-2 text-slate-muted shrink-0">
+            <SearchIcon className="h-5 w-5" />
+          </span>
+          <input
+            className="flex-1 bg-transparent outline-none py-1.5 text-sm min-w-0"
+            placeholder="Rechercher par titre ou description…"
+            value={filter}
+            onChange={(e) => setFilter(e.target.value)}
+          />
+        </div>
+        <div className="flex items-center gap-1 px-1 pb-0.5">
           {(["all", "ghost", "fresh"] as const).map((s) => (
             <button
               key={s}
               onClick={() => setStatusFilter(s)}
-              className={`px-3 py-1.5 rounded-full text-xs font-semibold transition ${
+              className={`px-3 py-1.5 rounded-full text-xs font-semibold transition whitespace-nowrap ${
                 statusFilter === s
                   ? "bg-ink-600 text-white"
                   : "text-slate-muted hover:bg-slate-100"

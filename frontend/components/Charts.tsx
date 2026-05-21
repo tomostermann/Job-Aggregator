@@ -75,35 +75,41 @@ export function OffersPerMonth({
 
   return (
     <div className="space-y-3">
-      <div
-        className="flex items-end gap-3 px-1"
-        style={{ height: CHART_HEIGHT_PX }}
-      >
-        {buckets.map((b) => {
-          const h = (b.count / max) * BAR_AREA_PX;
-          return (
-            <div
-              key={b.key}
-              className="flex-1 flex flex-col justify-end items-center gap-2 group h-full"
-            >
-              <div className="text-xs font-mono text-slate-ink opacity-0 group-hover:opacity-100 transition tabular-nums">
-                {b.count}
-              </div>
+      {/* Scrollable horizontalement sur mobile quand beaucoup de mois */}
+      <div className="overflow-x-auto -mx-1 pb-1">
+        <div
+          className="flex items-end gap-2 px-1"
+          style={{
+            height: CHART_HEIGHT_PX,
+            minWidth: `${buckets.length * 40}px`,
+          }}
+        >
+          {buckets.map((b) => {
+            const h = (b.count / max) * BAR_AREA_PX;
+            return (
               <div
-                className="w-full rounded-t-lg transition-all bg-gradient-to-t from-ink-600 to-ink-400"
-                style={{ height: `${Math.max(4, h)}px` }}
-                aria-label={`${b.fullLabel} : ${b.count} offres`}
-                role="img"
-                title={`${b.fullLabel} — ${b.count} offres`}
-              />
-              <div className="text-[10px] font-mono text-slate-muted">
-                {b.label}
+                key={b.key}
+                className="flex-1 min-w-[32px] flex flex-col justify-end items-center gap-2 group h-full"
+              >
+                <div className="text-xs font-mono text-slate-ink opacity-0 group-hover:opacity-100 transition tabular-nums">
+                  {b.count}
+                </div>
+                <div
+                  className="w-full rounded-t-lg transition-all bg-gradient-to-t from-ink-600 to-ink-400"
+                  style={{ height: `${Math.max(4, h)}px` }}
+                  aria-label={`${b.fullLabel} : ${b.count} offres`}
+                  role="img"
+                  title={`${b.fullLabel} — ${b.count} offres`}
+                />
+                <div className="text-[10px] font-mono text-slate-muted whitespace-nowrap">
+                  {b.label}
+                </div>
               </div>
-            </div>
-          );
-        })}
+            );
+          })}
+        </div>
       </div>
-      <div className="flex items-center justify-between text-xs text-slate-muted">
+      <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-slate-muted">
         <span>
           {total === 0
             ? "Aucune offre datée sur la période"

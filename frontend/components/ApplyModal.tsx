@@ -193,11 +193,7 @@ export function ApplyModal({ offer, user, token, onClose }: Props) {
             <MailRow label="De :" value={user.email} />
             <MailRow
               label="À :"
-              value={
-                recruiterEmail
-                  ? `${recruiterName ? recruiterName + " · " : ""}${recruiterEmail}`
-                  : "— (offre externe)"
-              }
+              value={recruiterEmail ?? "— (offre externe)"}
             />
             <EditableRow
               label="Objet :"
