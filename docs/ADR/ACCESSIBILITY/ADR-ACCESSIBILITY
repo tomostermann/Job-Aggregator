@@ -1,0 +1,57 @@
+# Accessibility Audits (WCAG 2.1 Level AA)
+
+## Tool used: Lighthouse (Chrome DevTools)
+
+Audits were run locally on `http://localhost:3000` using the Lighthouse
+accessibility panel in Chrome DevTools, in mobile mode.
+
+---
+
+## Results
+
+### Flow 1 — Dashboard
+
+**URL:** `http://localhost:3000/dashboard`
+**Score: 100/100** ✅
+
+![Lighthouse audit - Dashboard](./audits/dashboard.png)
+
+---
+
+### Flow 2 — Offer Search
+
+**URL:** `http://localhost:3000/offers`
+**Score: 96/100** ✅
+
+![Lighthouse audit - Offer Search](./audits/offers.png)
+
+---
+
+### Flow 3 — Offer Details
+
+**URL:** `http://localhost:3000/offers/[id]`
+**Score: 95/100** ✅
+
+![Lighthouse audit - Offer Details](./audits/offer-detail.png)
+
+---
+
+### Flow 4 — Login
+
+**URL:** `http://localhost:3000/login`
+**Score: 94/100** ✅
+
+![Lighthouse audit - Login](./audits/login.png)
+
+---
+
+## Summary
+
+| Flow          | URL          | Score   |
+| ------------- | ------------ | ------- |
+| Dashboard     | /dashboard   | 100/100 |
+| Offer Search  | /offers      | 96/100  |
+| Offer Details | /offers/[id] | 95/100  |
+| Login         | /login       | 94/100  |
+
+All flows exceed the WCAG 2.1 Level AA threshold.
