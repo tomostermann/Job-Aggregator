@@ -205,3 +205,7 @@ All decision records and product documentation are available in the [`docs/`](./
 | [`docs/features/value-proposition.md`](./docs/features/value-proposition.md)         | Value proposition             |
 | [`docs/features/feature-justification.md`](./docs/features/feature-justification.md) | Feature justification         |
 | [`docs/market-scan/`](./docs/market-scan/)                                           | Market analysis & benchmark   |
+
+## Vercel URL
+
+https://job-aggregator-test.vercel.app/
