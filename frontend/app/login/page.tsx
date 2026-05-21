@@ -78,14 +78,6 @@ function LoginForm() {
             onChange={(e) => setPassword(e.target.value)}
             aria-invalid={!!error}
           />
-          <div className="mt-1.5 flex justify-end">
-            <Link
-              href="#"
-              className="text-xs text-slate-muted hover:text-ink-700"
-            >
-              Mot de passe oublié ?
-            </Link>
-          </div>
         </div>
 
         {error && (

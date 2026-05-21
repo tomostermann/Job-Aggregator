@@ -118,17 +118,17 @@ function DashboardContent() {
                 : "Aperçu public du marché tech. Connectez-vous pour postuler ou créer une annonce."}
             </p>
           </div>
-          <div className="flex gap-2">
-            <Link href="/offers" className="btn btn-secondary">
+          <div className="flex flex-wrap gap-2">
+            <Link href="/offers" className="btn btn-secondary shrink-0">
               Voir toutes les offres
             </Link>
             {user ? (
-              <Link href="/offers/new" className="btn btn-primary">
+              <Link href="/offers/new" className="btn btn-primary shrink-0">
                 <SparklesIcon className="h-4 w-4" />
                 Créer une annonce
               </Link>
             ) : (
-              <Link href="/login" className="btn btn-primary">
+              <Link href="/login" className="btn btn-primary shrink-0">
                 Se connecter
               </Link>
             )}
