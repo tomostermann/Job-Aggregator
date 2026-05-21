@@ -17,11 +17,18 @@ function getTransporter(): Transporter | null {
   return cachedTransporter;
 }
 
+export interface MailAttachment {
+  filename: string;
+  content: Buffer;
+  contentType: string;
+}
+
 export interface SendMailInput {
   to: string;
   replyTo?: string;
   subject: string;
   text: string;
+  attachments?: MailAttachment[];
 }
 
 export async function sendMail(input: SendMailInput): Promise<{ delivered: boolean }> {
@@ -44,6 +51,11 @@ export async function sendMail(input: SendMailInput): Promise<{ delivered: boole
     replyTo: input.replyTo,
     subject: input.subject,
     text: input.text,
+    attachments: input.attachments?.map((a) => ({
+      filename: a.filename,
+      content: a.content,
+      contentType: a.contentType,
+    })),
   });
   return { delivered: true };
 }
