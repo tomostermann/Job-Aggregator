@@ -2,12 +2,12 @@
 
 ## Team
 
-| Member                   |
-| ------------------------ |
-| Tom Ostermann            |
-| Arthur Fabbri            |
-| Christophe Rajaonarivoni |
-| Imran Nogueira           |
+| Member                   | Role                     |
+| ------------------------ | ------------------------ |
+| Tom Ostermann            | Tech Lead / DevOps & CI  |
+| Arthur Fabbri            | Backend & Data           |
+| Christophe Rajaonarivoni | Frontend & Product       |
+| Imran Nogueira           | Frontend & Documentation |
 
 ## Tracking Tool
 
@@ -53,11 +53,11 @@ tracking subtasks completion.
 | WeLoveDevs API integration              | Arthur                  | ✅ Done |
 | Offer normalization pipeline            | Arthur                  | ✅ Done |
 | REST API: authentication & roles        | Arthur                  | ✅ Done |
-| API REST: offers CRUD + search          | Christophe              | 🔄 WIP  |
-| Database schema & model                 | Arthur                  | 📋 Todo |
-| ADR Architecture                        | Tom                     | 🔄 WIP  |
+| API REST: offers CRUD + search          | Christophe              | ✅ Done |
+| Database schema & model                 | Arthur                  | ✅ Done |
+| ADR Architecture                        | Tom                     | ✅ Done |
 | Product doc: market scan & wireframes   | Christophe, Arthur, Tom | ✅ Done |
-| Data feature: analytics & visualisation | —                       | 🔄 WIP  |
+| Data feature: analytics & visualisation | Tom                     | ✅ Done |
 
 ---
 
@@ -65,17 +65,18 @@ tracking subtasks completion.
 
 **Goal:** Build the user-facing interface and integrate data/AI features.
 
-| Task                                   | Owner  | Status  |
-| -------------------------------------- | ------ | ------- |
-| Auth pages: register & login           | Arthur | 📋 Todo |
-| User dashboard                         | —      | 📋 Todo |
-| Offer search & filtering               | —      | 📋 Todo |
-| Offer detail page                      | —      | 📋 Todo |
-| Admin interface                        | —      | 📋 Todo |
-| Responsive & accessibility             | —      | 📋 Todo |
-| AI feature: lightweight embedded model | —      | 📋 Todo |
-| Manual ingestion trigger               | —      | 📋 Todo |
-| REST API: admin                        | —      | 📋 Todo |
+| Task                                   | Owner           | Status  |
+| -------------------------------------- | --------------- | ------- |
+| Auth pages: register & login           | Arthur          | ✅ Done |
+| User dashboard                         | Tom             | ✅ Done |
+| Offer search & filtering               | Christophe      | ✅ Done |
+| Offer detail page                      | Tom             | ✅ Done |
+| Admin interface                        | Tom             | ✅ Done |
+| Responsive & accessibility             | Tom, Christophe | ✅ Done |
+| AI feature: lightweight embedded model | Arthur          | ✅ Done |
+| Manual ingestion trigger               | Tom             | ✅ Done |
+| REST API: admin                        | Arthur          | ✅ Done |
+| Saved offers                           | Christophe      | ✅ Done |
 
 ---
 
@@ -83,14 +84,14 @@ tracking subtasks completion.
 
 **Goal:** Harden the platform, automate CI, and finalize DevOps setup.
 
-| Task                        | Owner | Status  |
-| --------------------------- | ----- | ------- |
-| Application security        | —     | 📋 Todo |
-| Backend automated tests     | —     | 📋 Todo |
-| GitHub Actions CI pipeline  | Tom   | 📋 Todo |
-| Docker Compose — 3 services | Tom   | 📋 Todo |
-| Documentation setup & run   | —     | 📋 Todo |
-| Optional: online deployment | Tom   | 📋 Todo |
+| Task                        | Owner      | Status  |
+| --------------------------- | ---------- | ------- |
+| Application security        | Arthur     | ✅ Done |
+| Backend automated tests     | Christophe | ✅ Done |
+| GitHub Actions CI pipeline  | Christophe | ✅ Done |
+| Docker Compose — 3 services | Tom        | ✅ Done |
+| Documentation setup & run   | Tom        | ✅ Done |
+| Online deployment (BONUS)   | Arthur     | ✅ Done |
 
 ---
 
@@ -100,12 +101,12 @@ tracking subtasks completion.
 
 | Task                           | Owner                   | Status  |
 | ------------------------------ | ----------------------- | ------- |
-| ADR Data                       | Tom                     | 📋 Todo |
-| ADR IA                         | Tom                     | 📋 Todo |
-| ADR Sécurité                   | —                       | 📋 Todo |
-| ADR CI                         | —                       | 📋 Todo |
-| Project management evidence    | Tom, Arthur, Christophe | 🔄 WIP  |
-| Final presentation preparation | All                     | 📋 Todo |
+| ADR Data                       | Arthur                  | ✅ Done |
+| ADR IA                         | Arthur                  | ✅ Done |
+| ADR Sécurité                   | Arthur                  | ✅ Done |
+| ADR CI                         | Christophe              | ✅ Done |
+| Project management evidence    | Tom, Arthur, Christophe | ✅ Done |
+| Final presentation preparation | All                     | ✅ Done |
 
 ---
 
@@ -126,6 +127,8 @@ Discovery  Core    Frontend  Security  Docs &
 - ✅ Done
 - 🔄 WIP (Work In Progress)
 - 📋 Todo
+
+---
 
 ## Board Screenshot
 
