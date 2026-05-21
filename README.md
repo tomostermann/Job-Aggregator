@@ -127,4 +127,4 @@ All decision records and product documentation are available in the [`docs/`](./
 ---
 ## URL
 
-[https://job-aggregator-test.vercel.app/](https://job-aggregator-test.vercel.app/)
+The application is hosted on Vercel: [https://job-aggregator-test.vercel.app/](https://job-aggregator-test.vercel.app/)
