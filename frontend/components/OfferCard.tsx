@@ -4,7 +4,7 @@ import Link from "next/link";
 import type { Offer } from "@/lib/types";
 import { CompanyAvatar } from "./CompanyAvatar";
 import { isGhostJob, extractTags } from "@/lib/score";
-import { formatRelativeDate } from "@/lib/format";
+import { formatRelativeDate, formatSalary } from "@/lib/format";
 import {
   ArrowRightIcon,
   AlertIcon,
@@ -24,6 +24,7 @@ export function OfferCard({
   offer: Offer;
   compact?: boolean;
 }) {
+  const score = typeof offer.ai_score === "number" ? offer.ai_score : null;
   const ghost = isGhostJob(offer);
   const tags = extractTags(offer);
   const { isSaved, toggle } = useSavedOffers();
@@ -87,7 +88,7 @@ export function OfferCard({
               {offer.salary && (
                 <div className="mt-3 inline-flex items-center gap-1.5 text-sm font-semibold text-mint-600">
                   <EuroIcon className="h-4 w-4" />
-                  {offer.salary}
+                  {formatSalary(offer.salary)}
                 </div>
               )}
             </div>
@@ -127,15 +128,15 @@ export function OfferCard({
       </div>
 
       <div className="mt-4 ml-4 flex items-center justify-between gap-2">
-        {offer.ai_score !== undefined ? (
+        {score !== null ? (
           <div className="text-right">
             <div className="text-[10px] font-mono tracking-widest uppercase text-slate-muted">
               Score IA
             </div>
             <div
-              className={`font-display text-xl font-bold ${scoreColor(offer.ai_score)}`}
+              className={`font-display text-xl font-bold ${scoreColor(score)}`}
             >
-              {offer.ai_score}
+              {score}
               <span className="text-xs text-slate-muted font-medium"> /100</span>
             </div>
           </div>
@@ -162,6 +163,7 @@ function scoreColor(score: number): string {
 }
 
 export function OfferRow({ offer }: { offer: Offer }) {
+  const score = typeof offer.ai_score === "number" ? offer.ai_score : null;
   return (
     <Link
       href={`/offers/${offer.id}`}
@@ -178,11 +180,11 @@ export function OfferRow({ offer }: { offer: Offer }) {
       <span className="pill pill-slate text-[11px] font-mono">
         {offer.contract_type?.split(",")[0]?.trim() || "Job"}
       </span>
-      {offer.ai_score !== undefined && (
+      {score !== null && (
         <div
-          className={`text-sm font-bold ${scoreColor(offer.ai_score)} font-display tabular-nums`}
+          className={`text-sm font-bold ${scoreColor(score)} font-display tabular-nums`}
         >
-          IA {offer.ai_score}
+          IA {score}
         </div>
       )}
     </Link>

@@ -17,7 +17,6 @@ import {
 } from "@/components/Icons";
 import { api } from "@/lib/api";
 import type { Offer } from "@/lib/types";
-import { computeOfferScore } from "@/lib/score";
 import { useAuth } from "@/lib/auth-context";
 
 type SortMode = "ia" | "recent" | "salary";
@@ -47,6 +46,8 @@ function OffersInner() {
     contractTypes: [],
     location: "",
     remoteOnly: false,
+    stageMin: "",
+    stageMax: "",
   });
 
   // Debounce de la recherche
@@ -55,10 +56,12 @@ function OffersInner() {
     return () => clearTimeout(t);
   }, [search]);
 
-  // Reset à la page 0 quand un filtre serveur change (q, location)
+  // Reset à la page 0 quand un filtre serveur change (q, location, contract_type)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const contractTypesKey = filters.contractTypes.join(",");
   useEffect(() => {
     setPage(0);
-  }, [debounced, filters.location]);
+  }, [debounced, filters.location, contractTypesKey]);
 
   // Chargement (initial ou load more selon page)
   useEffect(() => {
@@ -67,33 +70,14 @@ function OffersInner() {
     if (isInitial) setLoading(true);
     else setLoadingMore(true);
 
-    // Mode IA avec recherche → appel microservice IA
-    const useIA = sort === "ia" && debounced.length > 0;
-
-    const fetchData = useIA
-      ? api.recommendations(debounced, 50).then((results) => ({
-          data: results.map((r) => ({
-            id: r.id,
-            title: r.title,
-            company: r.company,
-            location: r.location,
-            contract_type: r.contract_type,
-            salary: r.salary,
-            published_at: null,
-            ai_score: r.ai_score,
-          })),
-          total: results.length,
-          page: 0,
-          size: results.length,
-        }))
-      : api.listOffers({
-          q: debounced || undefined,
-          location: filters.location || undefined,
-          size: PAGE_SIZE,
-          page,
-        });
-
-    fetchData
+    api
+      .listOffers({
+        q: debounced || undefined,
+        location: filters.location || undefined,
+        contract_type: filters.contractTypes.length > 0 ? filters.contractTypes.join(",") : undefined,
+        size: PAGE_SIZE,
+        page,
+      })
       .then((res) => {
         if (cancelled) return;
         setTotal(res.total);
@@ -113,30 +97,40 @@ function OffersInner() {
     return () => {
       cancelled = true;
     };
-  }, [debounced, filters.location, page, sort]);
+  }, [debounced, filters.location, contractTypesKey, page]);
 
+  // contractTypes est filtré côté serveur → on ne le réapplique pas ici.
+  // remoteOnly et stageMin/stageMax restent côté client (difficiles à requêter en SQL).
   const filtered = useMemo(() => {
+    const fMin = filters.stageMin ? Number(filters.stageMin) : null;
+    const fMax = filters.stageMax ? Number(filters.stageMax) : null;
+    const stageActive = fMin !== null || fMax !== null;
     return offers.filter((o) => {
-      if (filters.contractTypes.length) {
-        const ct = (o.contract_type ?? "").toLowerCase();
-        const ok = filters.contractTypes.some((t) =>
-          ct.includes(t.toLowerCase()),
-        );
-        if (!ok) return false;
-      }
       if (filters.remoteOnly) {
         const hay = `${o.location ?? ""} ${o.description ?? ""}`.toLowerCase();
         if (!hay.includes("remote") && !hay.includes("télétravail"))
           return false;
       }
+      if (stageActive) {
+        const m = (o.description ?? "").match(
+          /Stage\s*:\s*(\d+)(?:\s*à\s*(\d+))?\s*mois/i,
+        );
+        if (!m) return false;
+        const oMin = Number(m[1]);
+        const oMax = m[2] ? Number(m[2]) : oMin;
+        const lo = fMin ?? -Infinity;
+        const hi = fMax ?? Infinity;
+        if (oMax < lo || oMin > hi) return false;
+      }
       return true;
     });
-  }, [offers, filters.contractTypes, filters.remoteOnly]);
+  }, [offers, filters.remoteOnly, filters.stageMin, filters.stageMax]);
 
   const sorted = useMemo(() => {
     const copy = [...filtered];
     if (sort === "ia") {
-      copy.sort((a, b) => computeOfferScore(b) - computeOfferScore(a));
+      // Trie par score IA réel (backend) — les offres sans score vont en bas
+      copy.sort((a, b) => (b.ai_score ?? -1) - (a.ai_score ?? -1));
     } else if (sort === "recent") {
       copy.sort((a, b) => {
         const ta = a.published_at ? new Date(a.published_at).getTime() : 0;
@@ -155,7 +149,13 @@ function OffersInner() {
   }, [filtered, sort]);
 
   const reset = () =>
-    setFilters({ contractTypes: [], location: "", remoteOnly: false });
+    setFilters({
+      contractTypes: [],
+      location: "",
+      remoteOnly: false,
+      stageMin: "",
+      stageMax: "",
+    });
 
   const loadMore = useCallback(() => {
     if (loadingMore) return;
@@ -164,8 +164,21 @@ function OffersInner() {
 
   const loadedCount = offers.length;
   const hasMore = loadedCount < total;
+  // contractTypes est côté serveur — seuls remoteOnly et stage sont encore côté client
   const clientFilteringActive =
-    filters.contractTypes.length > 0 || filters.remoteOnly;
+    filters.remoteOnly ||
+    !!filters.stageMin ||
+    !!filters.stageMax;
+  const stageRangeLabel =
+    filters.stageMin || filters.stageMax
+      ? filters.stageMin && filters.stageMax && filters.stageMin !== filters.stageMax
+        ? `${filters.stageMin}-${filters.stageMax} mois`
+        : filters.stageMin && filters.stageMax
+          ? `${filters.stageMin} mois`
+          : filters.stageMin
+            ? `≥ ${filters.stageMin} mois`
+            : `≤ ${filters.stageMax} mois`
+      : "";
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-[260px_1fr] gap-6 lg:gap-8">
@@ -212,6 +225,7 @@ function OffersInner() {
               {(filters.contractTypes.length > 0 ||
                 filters.location ||
                 filters.remoteOnly ||
+                stageRangeLabel ||
                 debounced) && (
                 <>
                   {" · "}
@@ -220,6 +234,7 @@ function OffersInner() {
                     {[
                       debounced && `« ${debounced} »`,
                       filters.contractTypes.join(", "),
+                      stageRangeLabel,
                       filters.location,
                       filters.remoteOnly && "Remote",
                     ]
@@ -253,15 +268,22 @@ function OffersInner() {
             onChange={(e) => setSearch(e.target.value)}
             aria-label="Rechercher des offres"
           />
-          <select
-            value={sort}
-            onChange={(e) => setSort(e.target.value as SortMode)}
-            className="text-sm bg-slate-50 border border-slate-line rounded-full px-3 py-1.5 mr-1 focus:outline-none focus:ring-2 focus:ring-ink-500/20"
-            aria-label="Tri des offres"
-          >
-            <option value="ia">Pertinence IA</option>
-            <option value="recent">Plus récent</option>
-          </select>
+          <div className="flex items-center gap-1 mr-1 shrink-0" role="group" aria-label="Tri des offres">
+            {(["ia", "recent"] as SortMode[]).map((s) => (
+              <button
+                key={s}
+                type="button"
+                onClick={() => setSort(s)}
+                className={`px-2.5 py-1.5 rounded-full text-xs font-semibold transition whitespace-nowrap ${
+                  sort === s
+                    ? "bg-ink-600 text-white"
+                    : "text-slate-muted hover:bg-slate-100"
+                }`}
+              >
+                {s === "ia" ? "✦ IA" : "Récent"}
+              </button>
+            ))}
+          </div>
         </div>
 
         {error && (

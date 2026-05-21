@@ -83,7 +83,7 @@ export default function RegisterPage() {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
             <label htmlFor="firstName" className="label">
-              Prénom
+              Prénom *
             </label>
             <input
               id="firstName"
@@ -99,7 +99,7 @@ export default function RegisterPage() {
           </div>
           <div>
             <label htmlFor="lastName" className="label">
-              Nom
+              Nom *
             </label>
             <input
               id="lastName"
@@ -117,7 +117,7 @@ export default function RegisterPage() {
 
         <div>
           <label htmlFor="email" className="label">
-            Email
+            Email *
           </label>
           <input
             id="email"
@@ -133,7 +133,7 @@ export default function RegisterPage() {
 
         <div>
           <label htmlFor="password" className="label">
-            Mot de passe
+            Mot de passe *
           </label>
           <input
             id="password"
@@ -156,7 +156,7 @@ export default function RegisterPage() {
 
         <div>
           <label htmlFor="confirm" className="label">
-            Confirmer
+            Confirmer *
           </label>
           <input
             id="confirm"
@@ -178,6 +178,8 @@ export default function RegisterPage() {
             {error}
           </div>
         )}
+
+        <p className="text-[11px] text-slate-muted">* : Champs obligatoires</p>
 
         <button
           type="submit"

@@ -13,13 +13,6 @@ export function Logo({
       href="/"
       className={`inline-flex items-center gap-2 font-display tracking-tight ${className}`}
       aria-label="Job Aggregator — accueil"
-      onClick={() => {
-        window.scrollTo({ top: 0, behavior: "smooth" });
-        const audio = new Audio(
-          "https://www.myinstants.com/media/sounds/dry-fart.mp3",
-        );
-        audio.play();
-      }}
     >
       <span
         aria-hidden

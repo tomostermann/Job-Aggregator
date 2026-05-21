@@ -79,10 +79,59 @@ export const api = {
 
   me: (token: string) => request<AdminUser>("/api/me", {}, token),
 
+  updateMe: (
+    token: string,
+    payload: {
+      firstName?: string;
+      lastName?: string;
+      phone?: string;
+      signature?: string;
+    },
+  ) =>
+    request<{ token: string }>(
+      "/api/me",
+      { method: "PATCH", body: JSON.stringify(payload) },
+      token,
+    ),
+
+  uploadCv: (
+    token: string,
+    payload: { filename: string; mimetype: string; data: string },
+  ) =>
+    request<{ token: string }>(
+      "/api/me/cv",
+      { method: "POST", body: JSON.stringify(payload) },
+      token,
+    ),
+
+  deleteCv: (token: string) =>
+    request<{ token: string }>(
+      "/api/me/cv",
+      { method: "DELETE" },
+      token,
+    ),
+
   listOffers: (query: OffersQuery = {}) =>
     request<OfferList>(`/api/offers${buildQuery(query as Record<string, string | number | undefined>)}`),
 
   getOffer: (id: string) => request<Offer>(`/api/offers/${id}`),
+
+  applyToOffer: (
+    token: string,
+    id: string,
+    payload: {
+      message: string;
+      subject?: string;
+      signature?: string;
+      includeCv?: boolean;
+      attachments?: { filename: string; mimetype: string; data: string }[];
+    },
+  ) =>
+    request<{ ok: true; delivered: boolean }>(
+      `/api/offers/${id}/apply`,
+      { method: "POST", body: JSON.stringify(payload) },
+      token,
+    ),
 
   createOffer: (
     token: string,
@@ -105,10 +154,26 @@ export const api = {
   adminUsers: (token: string) =>
     request<AdminUser[]>("/api/admin/users", {}, token),
 
+  adminStats: (token: string, months: number = 12) =>
+    request<{
+      offersTotal: number;
+      companiesTotal: number;
+      recentOffersCount: number;
+      offersPerMonth: { key: string; count: number }[];
+      contractDistribution: { type: string; count: number }[];
+    }>(`/api/admin/stats?months=${months}`, {}, token),
+
   adminSetUserRole: (token: string, id: string, role: "user" | "admin") =>
     request<AdminUser>(
       `/api/admin/users/${id}`,
       { method: "PATCH", body: JSON.stringify({ role }) },
+      token,
+    ),
+
+  adminDeleteUser: (token: string, id: string) =>
+    request<{ message: string }>(
+      `/api/admin/users/${id}`,
+      { method: "DELETE" },
       token,
     ),
 

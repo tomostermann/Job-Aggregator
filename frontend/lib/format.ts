@@ -59,6 +59,20 @@ export function truncate(text: string, max = 180): string {
 }
 
 /**
+ * Si le salaire est une plage où les deux bornes sont identiques
+ * (ex. "1 - 1 k€/an"), renvoie une version dédupliquée ("1 k€/an").
+ * Sinon, renvoie la chaîne d'origine.
+ */
+export function formatSalary(salary: string | null | undefined): string {
+  if (!salary) return "";
+  const m = salary.match(/^\s*(\d+(?:[.,]\d+)?)\s*-\s*(\d+(?:[.,]\d+)?)(\s*.*)$/);
+  if (!m) return salary;
+  const [, a, b, rest] = m;
+  if (a !== b) return salary;
+  return `${a}${rest}`.trim();
+}
+
+/**
  * Renvoie le meilleur libellé identifiant l'utilisateur :
  * "Prénom Nom" si disponibles, sinon prénom seul, sinon email, sinon "candidat".
  */

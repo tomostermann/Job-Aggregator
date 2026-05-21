@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
-import { Sidebar, MobileNav } from "./Sidebar";
+import { Sidebar, MobileNav, MobileHeader } from "./Sidebar";
 
 export function AppShell({
   children,
@@ -43,13 +43,15 @@ export function AppShell({
     return null;
   }
 
-  const variant: "user" | "admin" = requireRole === "admin" ? "admin" : "user";
+  const variant: "user" | "admin" =
+    user?.role === "admin" ? "admin" : "user";
 
   return (
     <div className="flex min-h-screen w-full">
       <Sidebar variant={variant} />
-      <div className="flex-1 min-w-0 pb-20 md:pb-0">
-        <main className="container-page py-6 md:py-10">{children}</main>
+      <div className="flex-1 min-w-0 flex flex-col">
+        <MobileHeader variant={variant} />
+        <main className="container-page py-6 pb-24 md:py-10 md:pb-10">{children}</main>
       </div>
       <MobileNav variant={variant} />
     </div>

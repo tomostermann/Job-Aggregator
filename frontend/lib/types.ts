@@ -6,6 +6,10 @@ export interface AuthUser {
   role: Role;
   firstName?: string;
   lastName?: string;
+  phone?: string;
+  signature?: string;
+  hasCv?: boolean;
+  cvFilename?: string;
 }
 
 export interface JwtPayload {
@@ -14,6 +18,10 @@ export interface JwtPayload {
   email?: string;
   firstName?: string;
   lastName?: string;
+  phone?: string;
+  signature?: string;
+  hasCv?: boolean;
+  cvFilename?: string;
   iat?: number;
   exp?: number;
 }
@@ -31,6 +39,10 @@ export interface Offer {
   published_at: string | null;
   created_at?: string | null;
   ai_score?: number; // score réel du microservice IA (0-100), si disponible
+  created_by?: string | null;
+  recruiter_email?: string | null;
+  recruiter_first_name?: string | null;
+  recruiter_last_name?: string | null;
 }
 
 export interface OfferList {
@@ -44,6 +56,7 @@ export interface OffersQuery {
   q?: string;
   location?: string;
   contract_type?: string;
+  status?: "ghost" | "fresh";
   page?: number;
   size?: number;
 }

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { AppShell } from "@/components/AppShell";
-import { ShieldIcon, RefreshIcon } from "@/components/Icons";
+import { ShieldIcon, RefreshIcon, TrashIcon } from "@/components/Icons";
 import { api, type AdminUser } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
 import { useToast } from "@/lib/toast-context";
@@ -55,7 +55,9 @@ function Inner() {
     setPending(u.id);
     try {
       const updated = await api.adminSetUserRole(token, u.id, role);
-      setUsers((prev) => prev.map((x) => (x.id === u.id ? { ...x, role: updated.role } : x)));
+      setUsers((prev) =>
+        prev.map((x) => (x.id === u.id ? { ...x, role: updated.role } : x)),
+      );
       push(`${u.email} → ${role}`, "success");
     } catch (err) {
       push(err instanceof Error ? err.message : "Erreur", "error");
@@ -64,8 +66,26 @@ function Inner() {
     }
   };
 
-  // Suppression de compte non disponible côté backend — l'admin peut uniquement
-  // changer le rôle (PATCH /api/admin/users/:id).
+  const onDelete = async (u: AdminUser) => {
+    if (!token) return;
+    const name = fullName(u) || u.email;
+    if (
+      !window.confirm(
+        `Supprimer définitivement le compte de ${name} ?\n\nLes favoris seront effacés et ses offres créées resteront mais sans propriétaire.`,
+      )
+    )
+      return;
+    setPending(u.id);
+    try {
+      await api.adminDeleteUser(token, u.id);
+      setUsers((prev) => prev.filter((x) => x.id !== u.id));
+      push(`${u.email} supprimé`, "success");
+    } catch (err) {
+      push(err instanceof Error ? err.message : "Erreur", "error");
+    } finally {
+      setPending(null);
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -78,7 +98,8 @@ function Inner() {
             Utilisateurs
           </h1>
           <p className="mt-1 text-slate-muted">
-            {users.length} compte{users.length > 1 ? "s" : ""} · gérez les rôles et révoquez les accès.
+            {users.length} compte{users.length > 1 ? "s" : ""} · gérez les rôles
+            et révoquez les accès.
           </p>
         </div>
         <button onClick={load} disabled={loading} className="btn btn-secondary">
@@ -96,9 +117,13 @@ function Inner() {
         </div>
         <div className="divide-y divide-slate-line">
           {loading ? (
-            <div className="p-8 text-center text-slate-muted text-sm">Chargement…</div>
+            <div className="p-8 text-center text-slate-muted text-sm">
+              Chargement…
+            </div>
           ) : users.length === 0 ? (
-            <div className="p-8 text-center text-slate-muted text-sm">Aucun utilisateur.</div>
+            <div className="p-8 text-center text-slate-muted text-sm">
+              Aucun utilisateur.
+            </div>
           ) : (
             users.map((u) => {
               const isMe = me?.id === u.id;
@@ -121,7 +146,9 @@ function Inner() {
                       <div className="font-medium truncate flex items-center gap-2">
                         {fullName(u) || u.email}
                         {isMe && (
-                          <span className="pill pill-mint !text-[10px]">vous</span>
+                          <span className="pill pill-mint !text-[10px]">
+                            vous
+                          </span>
                         )}
                       </div>
                       <div className="text-xs text-slate-muted truncate">
@@ -157,12 +184,30 @@ function Inner() {
                       <button
                         onClick={() => setRole(u, "user")}
                         disabled={pending === u.id || isMe}
-                        title={isMe ? "Vous ne pouvez pas vous révoquer vous-même" : ""}
+                        title={
+                          isMe
+                            ? "Vous ne pouvez pas vous révoquer vous-même"
+                            : ""
+                        }
                         className="btn btn-secondary !py-1.5 !px-3 !text-xs"
                       >
                         Révoquer admin
                       </button>
                     )}
+                    <button
+                      type="button"
+                      onClick={() => onDelete(u)}
+                      disabled={pending === u.id || isMe}
+                      title={
+                        isMe
+                          ? "Vous ne pouvez pas supprimer votre propre compte"
+                          : "Supprimer ce compte"
+                      }
+                      className="btn !py-1.5 !px-3 !text-xs bg-flame-500/10 text-flame-600 border border-flame-500/30 hover:bg-flame-500 hover:text-white disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-flame-500/10 disabled:hover:text-flame-600"
+                    >
+                      <TrashIcon className="h-3.5 w-3.5" />
+                      {pending === u.id ? "…" : "Supprimer"}
+                    </button>
                   </div>
                 </div>
               );
