@@ -75,11 +75,57 @@ docker compose down
 
 ```
 /
-├── frontend/         # Next.js app (React)
-├── backend/          # Express REST API (Node.js)
-├── docs/             # Project documentation
-│   └── adr/          # Architecture Decision Records
-│   └── market-scan/          # Market Analysis & Benchmark
+├── backend/                  # Express REST API (Node.js)
+│   ├── src/
+│   │   ├── admin/            # Admin routes
+│   │   ├── auth/             # Authentication logic
+│   │   ├── config/           # DB config, env, schema
+│   │   ├── data/             # Data ingestion & normalization
+│   │   ├── middlewares/      # Express middlewares
+│   │   ├── offers/           # Offer routes
+│   │   ├── routes/           # Route definitions
+│   │   ├── saved/            # Saved offers routes
+│   │   └── utils/            # Utility functions
+│   ├── tests/                # Automated tests
+│   │   ├── normalizer.api.test.js
+│   │   ├── normalizer.unit.test.js
+│   │   └── routes.test.ts
+│   └── Dockerfile
+├── frontend/                 # Next.js app (React)
+│   ├── app/                  # Next.js pages
+│   │   ├── admin/
+│   │   ├── dashboard/
+│   │   ├── login/
+│   │   ├── offers/
+│   │   ├── register/
+│   │   ├── saved/
+│   │   └── settings/
+│   ├── components/           # Reusable UI components
+│   │   ├── ApplyModal.tsx
+│   │   ├── AppShell.tsx
+│   │   ├── Charts.tsx
+│   │   ├── FilterPanel.tsx
+│   │   ├── Navbar.tsx
+│   │   ├── OfferCard.tsx
+│   │   └── ...
+│   ├── lib/                  # Helpers, context, types
+│   └── Dockerfile
+├── ia/                       # AI feature (Python)
+│   ├── main.py
+│   └── requirements.txt
+├── docs/                     # Project documentation
+│   ├── ADR/                  # Architecture Decision Records
+│   │   ├── ACCESSIBILITY/
+│   │   ├── ARCHITECTURE/
+│   │   ├── CI/
+│   │   ├── DATA/
+│   │   ├── DEPLOYMENT/
+│   │   └── SECURITE/
+│   ├── features/
+│   │   ├── feature-justification.md
+│   │   └── value-proposition.md
+│   └── market-scan/
+│       └── market-scan-sourced.md
 ├── docker-compose.yml
 ├── .env.example
 └── README.md
@@ -92,14 +138,24 @@ docker compose down
 Copy `.env.example` to `.env` and fill in the values:
 
 ```env
-DB_USER=           # PostgreSQL username
-DB_PASSWORD=       # PostgreSQL password
-DB_NAME=           # PostgreSQL database name
-DB_HOST=db         # Docker service name (do not change)
-DB_PORT=5432       # PostgreSQL port
+# Backend
+JWT_SECRET=your_jwt_secret_here
+PORT=5001
 
-# TODO: add WeLoveDevs API key once obtained
-WELOVEDEVS_API_KEY=
+# Database
+DB_HOST=jobaggregator-db
+DB_PORT=5432
+DB_USER=your_db_user
+DB_PASSWORD=your_db_password
+DB_NAME=your_db_name
+
+# PostgreSQL (Docker)
+POSTGRES_USER=your_db_user
+POSTGRES_PASSWORD=your_db_password
+POSTGRES_DB=your_db_name
+
+# WeLoveDevs API
+WELOVEDEVS_API_KEY=your_api_key_here
 ```
 
 > ⚠️ Never commit your `.env` file. It is listed in `.gitignore`.
@@ -108,9 +164,17 @@ WELOVEDEVS_API_KEY=
 
 ## API
 
-Base URL: `http://localhost:5000/api`
+Base URL: `http://localhost:5001/api`
 
-> Full API documentation — TODO
+| Method | Endpoint               | Description             |
+| ------ | ---------------------- | ----------------------- |
+| POST   | `/api/auth/register`   | Register a new user     |
+| POST   | `/api/auth/login`      | Login and get JWT token |
+| GET    | `/api/offers`          | List and search offers  |
+| GET    | `/api/offers/:id`      | Get offer details       |
+| POST   | `/api/offers/:id/save` | Save an offer           |
+| GET    | `/api/saved`           | Get saved offers        |
+| POST   | `/api/admin/ingest`    | Trigger data ingestion  |
 
 ---
 
@@ -118,14 +182,14 @@ Base URL: `http://localhost:5000/api`
 
 All decision records and product documentation are available in the [`docs/`](./docs) folder.
 
-| Document                                                   | Description              |
-| ---------------------------------------------------------- | ------------------------ |
-| [`docs/adr/ADR-001-stack.md`](./docs/adr/ADR-001-stack.md) | Technical stack decision |
-| `docs/adr/ADR-002-database.md`                             | Database choice — TODO   |
-| `docs/market-scan.md`                                      | Competitive analysis     |
-
----
-
-## URL
-
-The application is hosted on Vercel: [https://job-aggregator-test.vercel.app/](https://job-aggregator-test.vercel.app/)
+| Document                                                                             | Description                   |
+| ------------------------------------------------------------------------------------ | ----------------------------- |
+| [`docs/ADR/ARCHITECTURE/`](./docs/ADR/ARCHITECTURE/)                                 | Technical stack decision      |
+| [`docs/ADR/DATA/`](./docs/ADR/DATA/)                                                 | Data & WeLoveDevs integration |
+| [`docs/ADR/SECURITE/`](./docs/ADR/SECURITE/)                                         | Security choices              |
+| [`docs/ADR/CI/`](./docs/ADR/CI/)                                                     | CI/CD pipeline choices        |
+| [`docs/ADR/ACCESSIBILITY/`](./docs/ADR/ACCESSIBILITY/)                               | Accessibility audits          |
+| [`docs/ADR/DEPLOYMENT/`](./docs/ADR/DEPLOYMENT/)                                     | Deployment choices            |
+| [`docs/features/value-proposition.md`](./docs/features/value-proposition.md)         | Value proposition             |
+| [`docs/features/feature-justification.md`](./docs/features/feature-justification.md) | Feature justification         |
+| [`docs/market-scan/`](./docs/market-scan/)                                           | Market analysis & benchmark   |
