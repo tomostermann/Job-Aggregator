@@ -10,10 +10,20 @@ CREATE TABLE IF NOT EXISTS users (
   created_at TIMESTAMP DEFAULT NOW()
 );
 
--- Migration : ajoute first_name / last_name / phone si la table existait déjà
+-- Migration : ajoute first_name / last_name / phone / signature si la table existait déjà
 ALTER TABLE users ADD COLUMN IF NOT EXISTS first_name VARCHAR(100);
 ALTER TABLE users ADD COLUMN IF NOT EXISTS last_name VARCHAR(100);
 ALTER TABLE users ADD COLUMN IF NOT EXISTS phone VARCHAR(30);
+ALTER TABLE users ADD COLUMN IF NOT EXISTS signature TEXT;
+
+-- CV utilisateurs (stockage binaire en base)
+CREATE TABLE IF NOT EXISTS user_cvs (
+  user_id UUID PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+  filename VARCHAR(255) NOT NULL,
+  mimetype VARCHAR(100) NOT NULL,
+  data BYTEA NOT NULL,
+  updated_at TIMESTAMP DEFAULT NOW()
+);
 
 -- Offers
 CREATE TABLE IF NOT EXISTS offers (
