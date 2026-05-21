@@ -11,8 +11,19 @@ export async function getOffers(filters: OffersQuery) {
     values.push(`%${filters.location}%`);
   }
   if (filters.contract_type) {
-    conditions.push(`contract_type ILIKE $${i++}`);
-    values.push(`%${filters.contract_type}%`);
+    // Supporte plusieurs types séparés par des virgules (ex: "Alternance,Stage")
+    const types = filters.contract_type
+      .split(",")
+      .map((s) => s.trim())
+      .filter(Boolean);
+    if (types.length === 1) {
+      conditions.push(`contract_type ILIKE $${i++}`);
+      values.push(`%${types[0]}%`);
+    } else if (types.length > 1) {
+      const orClauses = types.map(() => `contract_type ILIKE $${i++}`);
+      conditions.push(`(${orClauses.join(" OR ")})`);
+      for (const t of types) values.push(`%${t}%`);
+    }
   }
   if (filters.q) {
     conditions.push(
@@ -30,7 +41,8 @@ export async function getOffers(filters: OffersQuery) {
     );
   }
 
-  const where = conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
+  const where =
+    conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
   const offset = (filters.page ?? 0) * (filters.size ?? 20);
 
   values.push(filters.size ?? 20);

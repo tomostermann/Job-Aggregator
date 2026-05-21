@@ -1,9 +1,9 @@
 import { Router, Request, Response } from "express";
 import pool from "../config/db";
 
-
+// eslint-disable-next-line @typescript-eslint/no-var-requires
 const { fetchAllOffers } = require("../data/fetcher");
-
+// eslint-disable-next-line @typescript-eslint/no-var-requires
 const { normalizeOffer } = require("../data/normalizer");
 
 const router = Router();

@@ -55,7 +55,9 @@ function Inner() {
     setPending(u.id);
     try {
       const updated = await api.adminSetUserRole(token, u.id, role);
-      setUsers((prev) => prev.map((x) => (x.id === u.id ? { ...x, role: updated.role } : x)));
+      setUsers((prev) =>
+        prev.map((x) => (x.id === u.id ? { ...x, role: updated.role } : x)),
+      );
       push(`${u.email} → ${role}`, "success");
     } catch (err) {
       push(err instanceof Error ? err.message : "Erreur", "error");
@@ -96,7 +98,8 @@ function Inner() {
             Utilisateurs
           </h1>
           <p className="mt-1 text-slate-muted">
-            {users.length} compte{users.length > 1 ? "s" : ""} · gérez les rôles et révoquez les accès.
+            {users.length} compte{users.length > 1 ? "s" : ""} · gérez les rôles
+            et révoquez les accès.
           </p>
         </div>
         <button onClick={load} disabled={loading} className="btn btn-secondary">
@@ -114,9 +117,13 @@ function Inner() {
         </div>
         <div className="divide-y divide-slate-line">
           {loading ? (
-            <div className="p-8 text-center text-slate-muted text-sm">Chargement…</div>
+            <div className="p-8 text-center text-slate-muted text-sm">
+              Chargement…
+            </div>
           ) : users.length === 0 ? (
-            <div className="p-8 text-center text-slate-muted text-sm">Aucun utilisateur.</div>
+            <div className="p-8 text-center text-slate-muted text-sm">
+              Aucun utilisateur.
+            </div>
           ) : (
             users.map((u) => {
               const isMe = me?.id === u.id;
@@ -139,7 +146,9 @@ function Inner() {
                       <div className="font-medium truncate flex items-center gap-2">
                         {fullName(u) || u.email}
                         {isMe && (
-                          <span className="pill pill-mint !text-[10px]">vous</span>
+                          <span className="pill pill-mint !text-[10px]">
+                            vous
+                          </span>
                         )}
                       </div>
                       <div className="text-xs text-slate-muted truncate">
@@ -175,7 +184,11 @@ function Inner() {
                       <button
                         onClick={() => setRole(u, "user")}
                         disabled={pending === u.id || isMe}
-                        title={isMe ? "Vous ne pouvez pas vous révoquer vous-même" : ""}
+                        title={
+                          isMe
+                            ? "Vous ne pouvez pas vous révoquer vous-même"
+                            : ""
+                        }
                         className="btn btn-secondary !py-1.5 !px-3 !text-xs"
                       >
                         Révoquer admin

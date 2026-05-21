@@ -3,7 +3,7 @@
 import Link from "next/link";
 import type { Offer } from "@/lib/types";
 import { CompanyAvatar } from "./CompanyAvatar";
-import { computeOfferScore, isGhostJob, extractTags } from "@/lib/score";
+import { isGhostJob, extractTags } from "@/lib/score";
 import { formatRelativeDate, formatSalary } from "@/lib/format";
 import {
   ArrowRightIcon,
@@ -24,7 +24,7 @@ export function OfferCard({
   offer: Offer;
   compact?: boolean;
 }) {
-  const score = computeOfferScore(offer);
+  const score = typeof offer.ai_score === "number" ? offer.ai_score : null;
   const ghost = isGhostJob(offer);
   const tags = extractTags(offer);
   const { isSaved, toggle } = useSavedOffers();
@@ -128,17 +128,21 @@ export function OfferCard({
       </div>
 
       <div className="mt-4 ml-4 flex items-center justify-between gap-2">
-        <div className="text-right">
-          <div className="text-[10px] font-mono tracking-widest uppercase text-slate-muted">
-            Score IA
+        {score !== null ? (
+          <div className="text-right">
+            <div className="text-[10px] font-mono tracking-widest uppercase text-slate-muted">
+              Score IA
+            </div>
+            <div
+              className={`font-display text-xl font-bold ${scoreColor(score)}`}
+            >
+              {score}
+              <span className="text-xs text-slate-muted font-medium"> /100</span>
+            </div>
           </div>
-          <div
-            className={`font-display text-xl font-bold ${scoreColor(score)}`}
-          >
-            {score}
-            <span className="text-xs text-slate-muted font-medium"> /100</span>
-          </div>
-        </div>
+        ) : (
+          <div />
+        )}
         <Link
           href={`/offers/${offer.id}`}
           className="btn btn-primary !py-2 !px-4 !text-sm"
@@ -159,7 +163,7 @@ function scoreColor(score: number): string {
 }
 
 export function OfferRow({ offer }: { offer: Offer }) {
-  const score = computeOfferScore(offer);
+  const score = typeof offer.ai_score === "number" ? offer.ai_score : null;
   return (
     <Link
       href={`/offers/${offer.id}`}
@@ -176,11 +180,13 @@ export function OfferRow({ offer }: { offer: Offer }) {
       <span className="pill pill-slate text-[11px] font-mono">
         {offer.contract_type?.split(",")[0]?.trim() || "Job"}
       </span>
-      <div
-        className={`text-sm font-bold ${scoreColor(score)} font-display tabular-nums`}
-      >
-        IA {score}
-      </div>
+      {score !== null && (
+        <div
+          className={`text-sm font-bold ${scoreColor(score)} font-display tabular-nums`}
+        >
+          IA {score}
+        </div>
+      )}
     </Link>
   );
 }

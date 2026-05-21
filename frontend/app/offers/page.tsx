@@ -17,7 +17,6 @@ import {
 } from "@/components/Icons";
 import { api } from "@/lib/api";
 import type { Offer } from "@/lib/types";
-import { computeOfferScore } from "@/lib/score";
 import { useAuth } from "@/lib/auth-context";
 
 type SortMode = "ia" | "recent" | "salary";
@@ -57,10 +56,12 @@ function OffersInner() {
     return () => clearTimeout(t);
   }, [search]);
 
-  // Reset à la page 0 quand un filtre serveur change (q, location)
+  // Reset à la page 0 quand un filtre serveur change (q, location, contract_type)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const contractTypesKey = filters.contractTypes.join(",");
   useEffect(() => {
     setPage(0);
-  }, [debounced, filters.location]);
+  }, [debounced, filters.location, contractTypesKey]);
 
   // Chargement (initial ou load more selon page)
   useEffect(() => {
@@ -73,6 +74,7 @@ function OffersInner() {
       .listOffers({
         q: debounced || undefined,
         location: filters.location || undefined,
+        contract_type: filters.contractTypes.length > 0 ? filters.contractTypes.join(",") : undefined,
         size: PAGE_SIZE,
         page,
       })
@@ -95,20 +97,15 @@ function OffersInner() {
     return () => {
       cancelled = true;
     };
-  }, [debounced, filters.location, page]);
+  }, [debounced, filters.location, contractTypesKey, page]);
 
+  // contractTypes est filtré côté serveur → on ne le réapplique pas ici.
+  // remoteOnly et stageMin/stageMax restent côté client (difficiles à requêter en SQL).
   const filtered = useMemo(() => {
     const fMin = filters.stageMin ? Number(filters.stageMin) : null;
     const fMax = filters.stageMax ? Number(filters.stageMax) : null;
     const stageActive = fMin !== null || fMax !== null;
     return offers.filter((o) => {
-      if (filters.contractTypes.length) {
-        const ct = (o.contract_type ?? "").toLowerCase();
-        const ok = filters.contractTypes.some((t) =>
-          ct.includes(t.toLowerCase()),
-        );
-        if (!ok) return false;
-      }
       if (filters.remoteOnly) {
         const hay = `${o.location ?? ""} ${o.description ?? ""}`.toLowerCase();
         if (!hay.includes("remote") && !hay.includes("télétravail"))
@@ -127,18 +124,13 @@ function OffersInner() {
       }
       return true;
     });
-  }, [
-    offers,
-    filters.contractTypes,
-    filters.remoteOnly,
-    filters.stageMin,
-    filters.stageMax,
-  ]);
+  }, [offers, filters.remoteOnly, filters.stageMin, filters.stageMax]);
 
   const sorted = useMemo(() => {
     const copy = [...filtered];
     if (sort === "ia") {
-      copy.sort((a, b) => computeOfferScore(b) - computeOfferScore(a));
+      // Trie par score IA réel (backend) — les offres sans score vont en bas
+      copy.sort((a, b) => (b.ai_score ?? -1) - (a.ai_score ?? -1));
     } else if (sort === "recent") {
       copy.sort((a, b) => {
         const ta = a.published_at ? new Date(a.published_at).getTime() : 0;
@@ -172,8 +164,8 @@ function OffersInner() {
 
   const loadedCount = offers.length;
   const hasMore = loadedCount < total;
+  // contractTypes est côté serveur — seuls remoteOnly et stage sont encore côté client
   const clientFilteringActive =
-    filters.contractTypes.length > 0 ||
     filters.remoteOnly ||
     !!filters.stageMin ||
     !!filters.stageMax;

@@ -14,7 +14,9 @@ import {
   setUserCv,
   deleteUserCv,
   getUserCv,
+  getUserWithProfile,
 } from "../auth/auth.service";
+import { signToken } from "../utils/jwt";
 
 const router = Router();
 
@@ -40,13 +42,11 @@ meRouter.patch("/", async (req: Request, res: Response) => {
     const userId = (req as any).user?.id as string | undefined;
     if (!userId) return res.status(401).json({ message: "Non authentifié" });
     const { firstName, lastName, phone, signature } = req.body ?? {};
-    const result = await updateProfile(userId, {
-      firstName,
-      lastName,
-      phone,
-      signature,
-    });
-    res.status(200).json(result);
+    await updateProfile(userId, { firstName, lastName, phone, signature });
+    const payload = await getUserWithProfile(userId);
+    if (!payload) return res.status(404).json({ message: "Utilisateur introuvable" });
+    const token = signToken(payload);
+    res.status(200).json({ token });
   } catch (err) {
     res
       .status(400)
@@ -64,14 +64,21 @@ meRouter.post("/cv", async (req: Request, res: Response) => {
       typeof mimetype !== "string" ||
       typeof data !== "string"
     ) {
-      return res.status(400).json({ message: "filename, mimetype, data (base64) requis" });
+      return res
+        .status(400)
+        .json({ message: "filename, mimetype, data (base64) requis" });
     }
     const buf = Buffer.from(data, "base64");
     if (buf.length === 0) {
-      return res.status(400).json({ message: "Fichier vide ou base64 invalide" });
+      return res
+        .status(400)
+        .json({ message: "Fichier vide ou base64 invalide" });
     }
-    const result = await setUserCv(userId, filename, mimetype, buf);
-    res.status(200).json(result);
+    await setUserCv(userId, filename, mimetype, buf);
+    const payload = await getUserWithProfile(userId);
+    if (!payload) return res.status(404).json({ message: "Utilisateur introuvable" });
+    const token = signToken(payload);
+    res.status(200).json({ token });
   } catch (err) {
     res
       .status(400)
@@ -83,8 +90,11 @@ meRouter.delete("/cv", async (req: Request, res: Response) => {
   try {
     const userId = (req as any).user?.id as string | undefined;
     if (!userId) return res.status(401).json({ message: "Non authentifié" });
-    const result = await deleteUserCv(userId);
-    res.status(200).json(result);
+    await deleteUserCv(userId);
+    const payload = await getUserWithProfile(userId);
+    if (!payload) return res.status(404).json({ message: "Utilisateur introuvable" });
+    const token = signToken(payload);
+    res.status(200).json({ token });
   } catch (err) {
     res
       .status(400)
@@ -105,7 +115,9 @@ meRouter.get("/cv", async (req: Request, res: Response) => {
     );
     res.send(cv.data);
   } catch (err) {
-    res.status(500).json({ message: err instanceof Error ? err.message : "Erreur" });
+    res
+      .status(500)
+      .json({ message: err instanceof Error ? err.message : "Erreur" });
   }
 });
 

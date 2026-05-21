@@ -223,8 +223,8 @@ export default function Home() {
                   Prêt à explorer ?
                 </h3>
                 <p className="mt-2 text-sm text-ink-100/80">
-                  Créez un compte avec votre adresse Epitech et accédez à toutes
-                  les offres ingérées + dashboard personnalisé.
+                  Créez un compte et accédez à toutes les offres ingérées +
+                  dashboard personnalisé.
                 </p>
               </div>
               <div className="flex flex-col gap-2">
