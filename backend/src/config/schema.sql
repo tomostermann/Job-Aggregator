@@ -1,8 +1,3 @@
-DROP TABLE IF EXISTS saved_offers;
-DROP TABLE IF EXISTS offers;
-DROP TABLE IF EXISTS user_cvs;
-DROP TABLE IF EXISTS users;
-
 -- Users
 CREATE TABLE IF NOT EXISTS users (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
