@@ -20,11 +20,13 @@ import { HeartIcon, HeartFillIcon } from "./Icons";
 export function OfferCard({
   offer,
   compact = false,
+  showScore = false,
 }: {
   offer: Offer;
   compact?: boolean;
+  showScore?: boolean;
 }) {
-  const score = typeof offer.ai_score === "number" ? offer.ai_score : null;
+  const score = showScore && typeof offer.ai_score === "number" ? offer.ai_score : null;
   const ghost = isGhostJob(offer);
   const tags = extractTags(offer);
   const { isSaved, toggle } = useSavedOffers();

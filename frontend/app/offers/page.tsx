@@ -305,7 +305,13 @@ function OffersInner() {
           ) : sorted.length === 0 ? (
             <EmptyOffers />
           ) : (
-            sorted.map((o) => <OfferCard key={o.id} offer={o} />)
+            sorted.map((o) => (
+              <OfferCard
+                key={o.id}
+                offer={o}
+                showScore={!!(debounced || contractTypesKey || filters.location || filters.remoteOnly)}
+              />
+            ))
           )}
         </div>
 
