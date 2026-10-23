@@ -30,8 +30,8 @@ Make sure you have the following installed:
 ### 1. Clone the repository
 
 ```bash
-git clone https://github.com/EpitechBachelorPromo2028/B-YEP-200-MLH-2-1-jobaggregator-1.git
-cd B-YEP-200-MLH-2-1-jobaggregator-1
+git clone https://github.com/tomostermann/Job-Aggregator.git
+cd Job-Aggregator
 ```
 
 ### 2. Set up environment variables
